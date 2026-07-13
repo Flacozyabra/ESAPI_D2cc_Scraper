@@ -2,7 +2,7 @@
 from PyQt6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QListWidget, QStackedWidget, QWidget, QLabel, QLineEdit, QPushButton, QFileDialog
 from PyQt6.QtCore import Qt
 from .title_bar import TitleBar
-from .theme import DARK_THEME_STYLE, COLOR_BACKGROUND
+from .themes.dark import DARK_THEME_STYLE, COLOR_BACKGROUND
 from core.config import load_config, save_config
 
 class SettingsWindow(QDialog):

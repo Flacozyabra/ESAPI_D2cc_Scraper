@@ -73,7 +73,7 @@ QComboBox::drop-down {{
 }}
 
 QComboBox::down-arrow {{
-    image: url(non_existent_icon.png); /* Заглушка, чтобы использовать стандартную стрелку или рисовать вручную */
+    image: url(non_existent_icon.png);
     width: 0; 
     height: 0; 
     border-left: 5px solid transparent;
@@ -214,7 +214,6 @@ def get_organ_field_style(is_valid=True):
             }}
         """
     else:
-        # Выделение красной/оранжевой рамкой, если орган не найден
         return f"""
             QComboBox {{
                 border: 2px solid {COLOR_ERROR};

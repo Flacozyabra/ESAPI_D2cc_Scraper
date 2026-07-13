@@ -2,7 +2,13 @@
 import os
 import json
 
-CONFIG_FILE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "config.json")
+# Получаем путь к AppData/Local
+LOCAL_APP_DATA = os.environ.get("LOCALAPPDATA")
+if not LOCAL_APP_DATA:
+    LOCAL_APP_DATA = os.path.expanduser("~")
+
+CONFIG_DIR = os.path.join(LOCAL_APP_DATA, "ESAPI_D2cc_Scraper")
+CONFIG_FILE = os.path.join(CONFIG_DIR, "config.json")
 
 DEFAULT_CONFIG = {
     "eclipse_bin_path": r"C:\Program Files (x86)\Varian\RTM\17.0\esapi\API",
@@ -30,6 +36,7 @@ def load_config():
 def save_config(config):
     """Сохраняет конфигурацию в файл config.json."""
     try:
+        os.makedirs(CONFIG_DIR, exist_ok=True)
         with open(CONFIG_FILE, "w", encoding="utf-8") as f:
             json.dump(config, f, indent=4, ensure_ascii=False)
         return True

@@ -2,7 +2,7 @@
 from PyQt6.QtWidgets import QWidget, QHBoxLayout, QLabel, QPushButton
 from PyQt6.QtCore import Qt, QPoint
 from PyQt6.QtGui import QMouseEvent
-from .theme import COLOR_HEADER, COLOR_TEXT, COLOR_SURFACE
+from .themes.dark import COLOR_HEADER, COLOR_TEXT, COLOR_SURFACE
 
 class TitleBar(QWidget):
     def __init__(self, parent=None, title="ESAPI D2cc Scraper"):

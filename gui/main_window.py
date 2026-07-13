@@ -4,7 +4,7 @@ from PyQt6.QtCore import Qt, QTimer, QStringListModel
 from PyQt6.QtGui import QDoubleValidator
 from .title_bar import TitleBar
 from .settings_window import SettingsWindow
-from .theme import DARK_THEME_STYLE, COLOR_BACKGROUND, get_organ_field_style
+from .themes.dark import DARK_THEME_STYLE, COLOR_BACKGROUND, get_organ_field_style
 from core.esapi_worker import EsapiWorker
 from core.config import load_config
 
