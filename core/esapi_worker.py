@@ -229,12 +229,12 @@ class EsapiWorker(QThread):
             # Выполняем расчет для каждого органа
             for organ_type, target_struct_id in organs_mapping.items():
                 if not target_struct_id:
-                    results[organ_type] = {"id": "", "sd": "-", "td": "-", "is_valid": False, "error_msg": "Не выбрано"}
+                    results[organ_type] = {"id": "", "sd": "n/a", "td": "n/a", "is_valid": False, "error_msg": "Не выбрано"}
                     continue
                     
                 struct = structures.get(target_struct_id.lower())
                 if struct is None:
-                    results[organ_type] = {"id": target_struct_id, "sd": "-", "td": "-", "is_valid": False, "error_msg": "Не найдено"}
+                    results[organ_type] = {"id": target_struct_id, "sd": "n/a", "td": "n/a", "is_valid": False, "error_msg": "Не найдено"}
                     continue
                 
                 # Проверка объема структуры
@@ -242,8 +242,8 @@ class EsapiWorker(QThread):
                 if struct_vol < volume:
                     results[organ_type] = {
                         "id": str(struct.Id),
-                        "sd": "-",
-                        "td": "-",
+                        "sd": "n/a",
+                        "td": "n/a",
                         "is_valid": False,
                         "error_msg": f"Объем < {volume} cc"
                     }
@@ -271,8 +271,8 @@ class EsapiWorker(QThread):
                     if dose_value is None or is_undefined:
                         results[organ_type] = {
                             "id": str(struct.Id),
-                            "sd": "-",
-                            "td": "-",
+                            "sd": "n/a",
+                            "td": "n/a",
                             "is_valid": False,
                             "error_msg": "Нет дозы"
                         }
@@ -291,7 +291,7 @@ class EsapiWorker(QThread):
                         if num_fractions is not None and num_fractions > 0:
                             sd_val = dose_val / num_fractions
                             
-                        sd_str = f"{sd_val:.2f} {unit_str}" if sd_val is not None else "-"
+                        sd_str = f"{sd_val:.2f} {unit_str}" if sd_val is not None else "n/a"
                         td_str = f"{dose_val:.2f} {unit_str}"
                         
                         results[organ_type] = {
@@ -303,8 +303,8 @@ class EsapiWorker(QThread):
                 except Exception as ex:
                     results[organ_type] = {
                         "id": str(struct.Id),
-                        "sd": "-",
-                        "td": "-",
+                        "sd": "n/a",
+                        "td": "n/a",
                         "is_valid": False,
                         "error_msg": f"Ошибка: {ex}"
                     }

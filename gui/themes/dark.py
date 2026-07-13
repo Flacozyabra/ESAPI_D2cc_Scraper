@@ -14,8 +14,18 @@ COLOR_ERROR = "#d13438"  # Красный для ненайденных орга
 
 DARK_THEME_STYLE = f"""
 QMainWindow {{
+    background-color: transparent;
+}}
+
+QDialog {{
+    background-color: transparent;
+}}
+
+/* Главный контейнер окон с рамкой и скруглением */
+#MainWindowWidget, #SettingsWindowWidget {{
     background-color: {COLOR_BACKGROUND};
-    color: {COLOR_TEXT};
+    border: 1px solid {COLOR_BORDER};
+    border-radius: 8px;
 }}
 
 QWidget {{
@@ -27,10 +37,11 @@ QWidget {{
 /* Заголовки и метки */
 QLabel {{
     color: {COLOR_TEXT};
+    background-color: transparent;
 }}
 
 QLabel#TitleLabel {{
-    font-size: 15px;
+    font-size: 14px;
     font-weight: bold;
     color: {COLOR_TEXT};
 }}
@@ -39,7 +50,7 @@ QLabel#TitleLabel {{
 QLineEdit {{
     background-color: {COLOR_SURFACE};
     border: 1px solid {COLOR_BORDER};
-    border-radius: 4px;
+    border-radius: 5px;
     padding: 6px 10px;
     color: {COLOR_TEXT};
 }}
@@ -51,7 +62,7 @@ QLineEdit:focus {{
 QComboBox {{
     background-color: {COLOR_SURFACE};
     border: 1px solid {COLOR_BORDER};
-    border-radius: 4px;
+    border-radius: 5px;
     padding: 5px 10px;
     color: {COLOR_TEXT};
     min-width: 60px;
@@ -76,8 +87,8 @@ QComboBox::down-arrow {{
     image: url(non_existent_icon.png);
     width: 0; 
     height: 0; 
-    border-left: 5px solid transparent;
-    border-right: 5px solid transparent;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
     border-top: 5px solid {COLOR_TEXT};
     margin-right: 8px;
 }}
@@ -90,36 +101,11 @@ QComboBox QAbstractItemView {{
     outline: 0;
 }}
 
-/* Таблицы */
-QTableWidget {{
-    background-color: {COLOR_BACKGROUND};
-    border: 1px solid {COLOR_BORDER};
-    gridline-color: {COLOR_BORDER};
-    border-radius: 4px;
-}}
-
-QTableWidget::item {{
-    padding: 5px;
-}}
-
-QTableWidget::item:selected {{
-    background-color: {COLOR_ACCENT};
-    color: white;
-}}
-
-QHeaderView::section {{
-    background-color: {COLOR_HEADER};
-    color: {COLOR_TEXT};
-    padding: 6px;
-    border: 1px solid {COLOR_BORDER};
-    font-weight: bold;
-}}
-
 /* Кнопки */
 QPushButton {{
     background-color: {COLOR_SURFACE};
     border: 1px solid {COLOR_BORDER};
-    border-radius: 4px;
+    border-radius: 5px;
     padding: 6px 14px;
     font-weight: 500;
     color: {COLOR_TEXT};
@@ -150,6 +136,12 @@ QPushButton#CalculateButton:pressed {{
     background-color: #005a9e;
 }}
 
+QPushButton#CalculateButton:disabled {{
+    background-color: #2a2a2b;
+    border: 1px solid #333335;
+    color: #555555;
+}}
+
 QPushButton#SettingsButton {{
     background-color: transparent;
     border: none;
@@ -161,11 +153,42 @@ QPushButton#SettingsButton:hover {{
     border-radius: 4px;
 }}
 
+/* Поле Лога */
+QTextEdit#LogView {{
+    background-color: #0f0f10;
+    border: 1px solid #252526;
+    border-radius: 4px;
+    color: #b0b0b0;
+    font-family: "Consolas", "Courier New", monospace;
+    font-size: 11px;
+    padding: 5px;
+}}
+
+/* Сплиттер-разделитель для сворачивания лога */
+QPushButton#LogToggleButton {{
+    background-color: #1a1a1b;
+    border-top: 1px solid #2d2d2d;
+    border-bottom: 1px solid #121212;
+    border-left: none;
+    border-right: none;
+    color: {COLOR_TEXT_MUTED};
+    font-size: 10px;
+    font-weight: bold;
+    height: 16px;
+    padding: 0px;
+    border-radius: 0px;
+}}
+
+QPushButton#LogToggleButton:hover {{
+    background-color: #242426;
+    color: {COLOR_TEXT};
+}}
+
 /* Списки (например, в настройках) */
 QListWidget {{
     background-color: {COLOR_HEADER};
     border: 1px solid {COLOR_BORDER};
-    border-radius: 4px;
+    border-radius: 5px;
 }}
 
 QListWidget::item {{
@@ -182,14 +205,14 @@ QListWidget::item:selected {{
 QScrollBar:vertical {{
     border: none;
     background: {COLOR_BACKGROUND};
-    width: 10px;
+    width: 8px;
     margin: 0px;
 }}
 
 QScrollBar::handle:vertical {{
     background: {COLOR_BORDER};
     min-height: 20px;
-    border-radius: 5px;
+    border-radius: 4px;
 }}
 
 QScrollBar::handle:vertical:hover {{

@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-from PyQt6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QGridLayout, QLabel, QLineEdit, QComboBox, QPushButton, QCompleter, QMessageBox
+from PyQt6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QGridLayout, QLabel, QLineEdit, QComboBox, QPushButton, QCompleter, QTextEdit, QGraphicsDropShadowEffect
 from PyQt6.QtCore import Qt, QTimer, QStringListModel
-from PyQt6.QtGui import QDoubleValidator
+from PyQt6.QtGui import QDoubleValidator, QColor
 from .title_bar import TitleBar
 from .settings_window import SettingsWindow
-from .themes.dark import DARK_THEME_STYLE, COLOR_BACKGROUND, get_organ_field_style
+from .themes.dark import DARK_THEME_STYLE, get_organ_field_style
 from core.esapi_worker import EsapiWorker
 from core.config import load_config
 
@@ -33,7 +33,7 @@ class MainWindow(QMainWindow):
         self.id_completer_model = QStringListModel()
         self.plan_completer_model = QStringListModel()
 
-        # Таймеры для debounce ввода (задержка поиска при вводе)
+        # Таймеры для debounce ввода
         self.name_timer = QTimer()
         self.name_timer.setSingleShot(True)
         self.name_timer.timeout.connect(self.search_patients_by_name)
@@ -47,20 +47,41 @@ class MainWindow(QMainWindow):
         
         # Инициализация ESAPI подключения
         self.lbl_status.setText("Подключение к ESAPI...")
+        self.write_log("Запуск приложения. Попытка подключения к ESAPI...", "info")
         self.worker.request_action("connect")
 
     def init_ui(self):
-        # Настройка главного окна: безрамочность и темная тема
+        # Настройка главного окна: безрамочность и прозрачный фон для скругленных углов
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setStyleSheet(DARK_THEME_STYLE)
-        self.resize(500, 480)
+        self.resize(520, 580)
         
-        # Главный контейнер
-        main_widget = QWidget(self)
-        self.setCentralWidget(main_widget)
+        # Внешний layout для отступа под тень
+        outer_layout = QVBoxLayout()
+        outer_layout.setContentsMargins(5, 5, 5, 5)
+        outer_layout.setSpacing(0)
         
-        main_layout = QVBoxLayout(main_widget)
-        main_layout.setContentsMargins(1, 1, 1, 1)  # 1px рамка вокруг окна
+        # Главный виджет контейнера (для отрисовки тени и скругленных углов в QSS)
+        self.window_widget = QWidget(self)
+        self.window_widget.setObjectName("MainWindowWidget")
+        outer_layout.addWidget(self.window_widget)
+        
+        # Установка тени вокруг окна
+        shadow = QGraphicsDropShadowEffect(self)
+        shadow.setBlurRadius(12)
+        shadow.setColor(QColor(0, 0, 0, 160))
+        shadow.setOffset(0, 0)
+        self.window_widget.setGraphicsEffect(shadow)
+        
+        # Устанавливаем центральный виджет
+        central_widget = QWidget(self)
+        central_widget.setLayout(outer_layout)
+        self.setCentralWidget(central_widget)
+        
+        # Основной layout внутри контейнера
+        main_layout = QVBoxLayout(self.window_widget)
+        main_layout.setContentsMargins(1, 1, 1, 1)
         main_layout.setSpacing(0)
         
         # Заголовок (TitleBar)
@@ -68,11 +89,10 @@ class MainWindow(QMainWindow):
         self.title_bar.btn_settings.clicked.connect(self.open_settings)
         main_layout.addWidget(self.title_bar)
         
-        # Контентная часть
-        content_widget = QWidget(self)
-        content_widget.setStyleSheet(f"background-color: {COLOR_BACKGROUND};")
+        # Внутренний контейнер для формы
+        content_widget = QWidget(self.window_widget)
         content_layout = QVBoxLayout(content_widget)
-        content_layout.setContentsMargins(20, 20, 20, 20)
+        content_layout.setContentsMargins(20, 20, 20, 10)
         content_layout.setSpacing(15)
         
         # Сетка ввода (Patient Name, Patient ID, Plan ID, Volume)
@@ -98,7 +118,6 @@ class MainWindow(QMainWindow):
         
         input_grid.addWidget(QLabel("Vol (cc):", self), 1, 2)
         self.txt_volume = QLineEdit(str(self.config.get("default_volume", 2.0)), self)
-        # Валидатор для чисел с плавающей точкой
         volume_validator = QDoubleValidator(0.01, 100.0, 2, self)
         volume_validator.setNotation(QDoubleValidator.Notation.StandardNotation)
         self.txt_volume.setValidator(volume_validator)
@@ -112,12 +131,12 @@ class MainWindow(QMainWindow):
         line.setStyleSheet("background-color: #2d2d2d;")
         content_layout.addWidget(line)
         
-        # Таблица/сетка органов и результатов
+        # Сетка результатов
         results_grid = QGridLayout()
         results_grid.setSpacing(10)
         results_grid.setColumnStretch(0, 3)  # Орган (ComboBox)
-        results_grid.setColumnStretch(1, 2)  # Разовая доза (SD)
-        results_grid.setColumnStretch(2, 2)  # Суммарная доза (TD)
+        results_grid.setColumnStretch(1, 2)  # SD
+        results_grid.setColumnStretch(2, 2)  # TD
         
         # Заголовки колонок
         results_grid.addWidget(QLabel("<b>Орган / Структура</b>", self), 0, 0)
@@ -128,22 +147,19 @@ class MainWindow(QMainWindow):
         organs = [("rectum", "Rectum"), ("bladder", "Bladder"), ("sigmoid", "Sigmoid"), ("bowel", "Bowel")]
         
         for idx, (organ_key, organ_title) in enumerate(organs, start=1):
-            # ComboBox для выбора структуры
             cb = QComboBox(self)
             cb.setEditable(True)
             cb.setPlaceholderText(f"Выбор {organ_title}...")
             results_grid.addWidget(cb, idx, 0)
             
-            # Метка для вывода значения разовой дозы (SD)
-            lbl_sd = QLabel("-", self)
+            lbl_sd = QLabel("n/a", self)
             lbl_sd.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            lbl_sd.setStyleSheet("background-color: #121212; border: 1px solid #2d2d2d; border-radius: 4px; padding: 4px;")
+            lbl_sd.setStyleSheet("background-color: #121212; border: 1px solid #2d2d2d; border-radius: 4px; padding: 4px; color: #808080;")
             results_grid.addWidget(lbl_sd, idx, 1)
             
-            # Метка для вывода значения суммарной дозы (TD)
-            lbl_td = QLabel("-", self)
+            lbl_td = QLabel("n/a", self)
             lbl_td.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            lbl_td.setStyleSheet("background-color: #121212; border: 1px solid #2d2d2d; border-radius: 4px; padding: 4px;")
+            lbl_td.setStyleSheet("background-color: #121212; border: 1px solid #2d2d2d; border-radius: 4px; padding: 4px; color: #808080;")
             results_grid.addWidget(lbl_td, idx, 2)
             
             self.organ_widgets[organ_key] = {
@@ -162,12 +178,26 @@ class MainWindow(QMainWindow):
         self.btn_calculate.clicked.connect(self.start_calculation)
         content_layout.addWidget(self.btn_calculate)
         
-        # Статус-бар внизу
+        # Статус-бар над логом
         self.lbl_status = QLabel("Готов к работе", self)
-        self.lbl_status.setStyleSheet("color: #808080; font-size: 11px; padding-top: 5px;")
+        self.lbl_status.setStyleSheet("color: #808080; font-size: 11px; padding-top: 2px;")
         content_layout.addWidget(self.lbl_status)
         
         main_layout.addWidget(content_widget)
+        
+        # --- Секция лога и разделителя-кнопки ---
+        # Кнопка-стрелка для сворачивания/разворачивания лога
+        self.btn_toggle_log = QPushButton("▼ СКРЫТЬ ЛОГ ▼", self)
+        self.btn_toggle_log.setObjectName("LogToggleButton")
+        self.btn_toggle_log.clicked.connect(self.toggle_log)
+        main_layout.addWidget(self.btn_toggle_log)
+        
+        # Текстовое поле лога
+        self.log_view = QTextEdit(self)
+        self.log_view.setObjectName("LogView")
+        self.log_view.setReadOnly(True)
+        self.log_view.setFixedHeight(110)
+        main_layout.addWidget(self.log_view)
         
         # Настройка автокомплитеров
         self.name_completer = QCompleter(self)
@@ -188,36 +218,57 @@ class MainWindow(QMainWindow):
         self.txt_plan_id.setCompleter(self.plan_completer)
 
     def setup_connections(self):
-        # Подключения сигналов воркера
         self.worker.connection_status.connect(self.on_connection_status)
         self.worker.patient_search_results.connect(self.on_patient_search_results)
         self.worker.patient_data_loaded.connect(self.on_patient_loaded)
         self.worker.calculation_completed.connect(self.on_calculation_completed)
         self.worker.error_occurred.connect(self.on_error)
         
-        # Отслеживание ввода пользователя
         self.txt_name.textEdited.connect(self.on_name_edited)
         self.txt_id.textEdited.connect(self.on_id_edited)
         self.txt_plan_id.textEdited.connect(self.check_calculation_readiness)
         
-        # События завершения выбора в автокомплитере
         self.name_completer.activated[str].connect(self.on_name_selected)
         self.id_completer.activated[str].connect(self.on_id_selected)
         self.plan_completer.activated[str].connect(self.on_plan_selected)
         
-        # Событие нажатия Enter
         self.txt_name.returnPressed.connect(lambda: self.load_patient_by_field(is_id=False))
         self.txt_id.returnPressed.connect(lambda: self.load_patient_by_field(is_id=True))
         self.txt_plan_id.returnPressed.connect(self.on_plan_selected)
 
+    # --- Управление логом ---
+    def write_log(self, message, level="info"):
+        """Записывает строку лога с цветовым форматированием в нижнее текстовое поле."""
+        color_map = {
+            "info": "#b0b0b0",
+            "warning": "#e6a23c",
+            "error": "#f56c6c",
+            "success": "#67c23a"
+        }
+        color = color_map.get(level, "#b0b0b0")
+        self.log_view.append(f'<span style="color: {color};">[{level.upper()}] {message}</span>')
+
+    def toggle_log(self):
+        """Сворачивает / разворачивает лог при нажатии на разделитель."""
+        if self.log_view.isVisible():
+            self.log_view.setVisible(False)
+            self.btn_toggle_log.setText("▲ ПОКАЗАТЬ ЛОГ ▲")
+        else:
+            self.log_view.setVisible(True)
+            self.btn_toggle_log.setText("▼ СКРЫТЬ ЛОГ ▼")
+
     # --- Обработка подключения ESAPI ---
     def on_connection_status(self, success, message):
-        self.lbl_status.setText(message)
         if success:
-            self.lbl_status.setStyleSheet("color: #4CAF50;")  # Зеленый
+            self.lbl_status.setText("Подключение к ESAPI успешно установлено.")
+            self.lbl_status.setStyleSheet("color: #4CAF50;")
+            self.write_log(message, "success")
         else:
-            self.lbl_status.setStyleSheet("color: #f44336;")  # Красный
-            QMessageBox.critical(self, "Ошибка подключения", message)
+            # Не вызываем MessageBox, просто логируем ошибку
+            self.lbl_status.setText("ESAPI DLL не подключен.")
+            self.lbl_status.setStyleSheet("color: #f44336;")
+            self.write_log(f"Не удалось загрузить библиотеки ESAPI: {message}", "error")
+            self.write_log("Пожалуйста, откройте настройки (шестеренка вверху) и укажите корректный путь к DLL ESAPI.", "warning")
 
     # --- Поиск пациентов ---
     def on_name_edited(self, text):
@@ -239,7 +290,6 @@ class MainWindow(QMainWindow):
             self.worker.request_action("search_patients", query=query, by_id=True)
 
     def on_patient_search_results(self, results, search_by_id):
-        # Формируем списки для автокомплитера
         suggestions = []
         for r in results:
             if search_by_id:
@@ -252,19 +302,22 @@ class MainWindow(QMainWindow):
         else:
             self.name_completer_model.setStringList(suggestions)
 
-    # --- Загрузка пациента и его планов ---
+    # --- Загрузка пациента ---
     def on_name_selected(self, name):
         self.lbl_status.setText(f"Загрузка пациента по имени: {name}...")
+        self.write_log(f"Запрос загрузки пациента по имени: {name}...", "info")
         self.worker.request_action("load_patient", patient_id_or_name=name, is_id=False)
 
     def on_id_selected(self, patient_id):
         self.lbl_status.setText(f"Загрузка пациента по ID: {patient_id}...")
+        self.write_log(f"Запрос загрузки пациента по ID: {patient_id}...", "info")
         self.worker.request_action("load_patient", patient_id_or_name=patient_id, is_id=True)
 
     def load_patient_by_field(self, is_id=True):
         field_text = self.txt_id.text().strip() if is_id else self.txt_name.text().strip()
         if field_text:
             self.lbl_status.setText(f"Загрузка пациента: {field_text}...")
+            self.write_log(f"Загрузка пациента: {field_text}...", "info")
             self.worker.request_action("load_patient", patient_id_or_name=field_text, is_id=is_id)
 
     def on_patient_loaded(self, patient_id, patient_name, plans, structures):
@@ -273,7 +326,6 @@ class MainWindow(QMainWindow):
         self.plans = plans
         self.all_structures = structures
         
-        # Обновляем текстовые поля без триггера автопоиска
         self.txt_id.blockSignals(True)
         self.txt_name.blockSignals(True)
         self.txt_id.setText(patient_id)
@@ -281,14 +333,13 @@ class MainWindow(QMainWindow):
         self.txt_id.blockSignals(False)
         self.txt_name.blockSignals(False)
         
-        # Обновляем комплитер планов
         self.plan_completer_model.setStringList(plans)
         
         # Сбрасываем старые данные органов
         for widget in self.organ_widgets.values():
             widget["combo"].clear()
-            widget["sd_label"].setText("-")
-            widget["td_label"].setText("-")
+            widget["sd_label"].setText("n/a")
+            widget["td_label"].setText("n/a")
             widget["sd_label"].setStyleSheet("background-color: #121212; border: 1px solid #2d2d2d; border-radius: 4px; padding: 4px; color: #808080;")
             widget["td_label"].setStyleSheet("background-color: #121212; border: 1px solid #2d2d2d; border-radius: 4px; padding: 4px; color: #808080;")
             widget["combo"].setStyleSheet("")
@@ -296,7 +347,7 @@ class MainWindow(QMainWindow):
         self.txt_plan_id.clear()
         self.txt_plan_id.setFocus()
         self.lbl_status.setText(f"Пациент {patient_name} успешно загружен.")
-        self.lbl_status.setStyleSheet("color: #e1e1e1;")
+        self.write_log(f"Пациент {patient_name} (ID: {patient_id}) загружен. Найдено планов: {len(plans)}.", "success")
         self.check_calculation_readiness()
 
     # --- Обработка планов и органов ---
@@ -305,6 +356,8 @@ class MainWindow(QMainWindow):
         if not plan_id or plan_id not in self.plans:
             return
             
+        self.write_log(f"Выбран план: '{plan_id}'. Выполняется автопоиск структур...", "info")
+        
         # Заполняем комбобоксы всеми структурами плана
         for organ_key, widget in self.organ_widgets.items():
             cb = widget["combo"]
@@ -317,25 +370,22 @@ class MainWindow(QMainWindow):
                 cb.setCurrentText(matched_structure)
                 cb.setStyleSheet(get_organ_field_style(is_valid=True))
                 cb.setToolTip("Структура успешно найдена автопоиском.")
+                self.write_log(f"[{widget['title']}] Автоподстановка: '{matched_structure}'", "info")
             else:
-                # Если совпадение не найдено, подсвечиваем поле красным
                 cb.setStyleSheet(get_organ_field_style(is_valid=False))
                 cb.setToolTip("Структура не найдена. Выберите её вручную из списка.")
+                self.write_log(f"[{widget['title']}] Структура автопоиском не найдена. Выберите вручную.", "warning")
                 
-            # Подключаем валидацию рамки при ручном изменении выбора
             cb.currentTextChanged.connect(lambda text, key=organ_key: self.validate_organ_field(key, text))
             
         self.check_calculation_readiness()
 
     def find_structure_match(self, organ_key):
-        """Ищет первое совпадение среди синонимов для конкретного органа."""
         targets = self.synonyms[organ_key]
-        # Точное совпадение
         for target in targets:
             for s in self.all_structures:
                 if s.lower() == target.lower():
                     return s
-        # Совпадение по подстроке
         for target in targets:
             for s in self.all_structures:
                 if target.lower() in s.lower():
@@ -358,7 +408,6 @@ class MainWindow(QMainWindow):
         has_patient = bool(self.patient_id)
         has_plan = self.txt_plan_id.text().strip() in self.plans
         has_volume = bool(self.txt_volume.text().strip())
-        
         self.btn_calculate.setEnabled(has_patient and has_plan and has_volume)
 
     def start_calculation(self):
@@ -369,12 +418,13 @@ class MainWindow(QMainWindow):
         organs_mapping = {}
         for organ_key, widget in self.organ_widgets.items():
             organs_mapping[organ_key] = widget["combo"].currentText().strip()
-            widget["sd_label"].setText("-")
+            widget["sd_label"].setText("n/a")
             widget["td_label"].setText("...")
             widget["sd_label"].setStyleSheet("background-color: #121212; border: 1px solid #2d2d2d; border-radius: 4px; padding: 4px; color: #808080;")
             widget["td_label"].setStyleSheet("background-color: #121212; border: 1px solid #2d2d2d; border-radius: 4px; padding: 4px; color: #808080;")
             
         self.lbl_status.setText("Выполняется расчет...")
+        self.write_log(f"Запущен расчет D2cc на объем {volume} cc для плана '{plan_id}'...", "info")
         self.btn_calculate.setEnabled(False)
         
         self.worker.request_action(
@@ -394,11 +444,13 @@ class MainWindow(QMainWindow):
                 widget["td_label"].setText(res["td"])
                 widget["sd_label"].setStyleSheet("background-color: #121212; border: 1px solid #2d2d2d; border-radius: 4px; padding: 4px; color: #4CAF50; font-weight: bold;")
                 widget["td_label"].setStyleSheet("background-color: #121212; border: 1px solid #2d2d2d; border-radius: 4px; padding: 4px; color: #4CAF50; font-weight: bold;")
+                self.write_log(f"[{widget['title']}] Расчет успешен. SD: {res['sd']}, TD: {res['td']}", "success")
             else:
-                widget["sd_label"].setText("-")
+                widget["sd_label"].setText("n/a")
                 widget["td_label"].setText(res.get("error_msg", "Ошибка"))
                 widget["sd_label"].setStyleSheet("background-color: #121212; border: 1px solid #2d2d2d; border-radius: 4px; padding: 4px; color: #f44336;")
                 widget["td_label"].setStyleSheet("background-color: #121212; border: 1px solid #2d2d2d; border-radius: 4px; padding: 4px; color: #f44336; font-size: 11px;")
+                self.write_log(f"[{widget['title']}] Ошибка расчета: {res.get('error_msg')}", "error")
                 
         self.lbl_status.setText("Расчет успешно завершен.")
         self.lbl_status.setStyleSheet("color: #4CAF50;")
@@ -408,13 +460,13 @@ class MainWindow(QMainWindow):
     def open_settings(self):
         settings_dialog = SettingsWindow(self)
         if settings_dialog.exec():
-            # Перезагружаем настройки
             self.config = load_config()
             self.lbl_status.setText("Настройки сохранены. Подключение к ESAPI...")
+            self.write_log("Путь к DLL обновлен. Переподключение к ESAPI...", "info")
             self.worker.request_action("connect")
 
     def on_error(self, message):
         self.lbl_status.setText("Ошибка!")
         self.lbl_status.setStyleSheet("color: #f44336;")
-        QMessageBox.warning(self, "Внимание", message)
+        self.write_log(message, "error")
         self.check_calculation_readiness()

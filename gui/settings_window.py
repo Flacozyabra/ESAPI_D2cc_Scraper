@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
-from PyQt6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QListWidget, QStackedWidget, QWidget, QLabel, QLineEdit, QPushButton, QFileDialog
+from PyQt6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QListWidget, QStackedWidget, QWidget, QLabel, QLineEdit, QPushButton, QFileDialog, QGraphicsDropShadowEffect
 from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QColor
 from .title_bar import TitleBar
-from .themes.dark import DARK_THEME_STYLE, COLOR_BACKGROUND
+from .themes.dark import DARK_THEME_STYLE
 from core.config import load_config, save_config
 
 class SettingsWindow(QDialog):
@@ -16,13 +17,33 @@ class SettingsWindow(QDialog):
         self.init_ui()
 
     def init_ui(self):
-        # Настройка окна: темная тема, безрамочность
-        self.setWindowFlags(Qt.WindowType.Dialog | Qt.WindowType.FramelessWindowHint)
+        # Настройка безрамочного окна и прозрачного фона для скругленных углов
+        self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowSystemMenuHint)
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        self.setWindowModality(Qt.WindowModality.ApplicationModal)
         self.setStyleSheet(DARK_THEME_STYLE)
-        self.resize(550, 300)
+        self.resize(560, 310)
         
-        main_layout = QVBoxLayout(self)
-        main_layout.setContentsMargins(1, 1, 1, 1)  # 1px граница окна
+        # Внешний layout для отступа под тень
+        outer_layout = QVBoxLayout(self)
+        outer_layout.setContentsMargins(5, 5, 5, 5)
+        outer_layout.setSpacing(0)
+        
+        # Главный контейнер (для QSS границы и скругления)
+        self.window_widget = QWidget(self)
+        self.window_widget.setObjectName("SettingsWindowWidget")
+        outer_layout.addWidget(self.window_widget)
+        
+        # Тень для эффекта глубины
+        shadow = QGraphicsDropShadowEffect(self)
+        shadow.setBlurRadius(12)
+        shadow.setColor(QColor(0, 0, 0, 160))
+        shadow.setOffset(0, 0)
+        self.window_widget.setGraphicsEffect(shadow)
+        
+        # Внутренний layout главного контейнера
+        main_layout = QVBoxLayout(self.window_widget)
+        main_layout.setContentsMargins(1, 1, 1, 1)
         main_layout.setSpacing(0)
         
         # Верхний заголовок
@@ -32,8 +53,7 @@ class SettingsWindow(QDialog):
         main_layout.addWidget(self.title_bar)
         
         # Центральный контейнер
-        content_widget = QWidget(self)
-        content_widget.setStyleSheet(f"background-color: {COLOR_BACKGROUND};")
+        content_widget = QWidget(self.window_widget)
         content_layout = QHBoxLayout(content_widget)
         content_layout.setContentsMargins(15, 15, 15, 15)
         content_layout.setSpacing(15)
@@ -74,8 +94,7 @@ class SettingsWindow(QDialog):
         main_layout.addWidget(content_widget)
         
         # Нижняя панель с кнопками
-        buttons_widget = QWidget(self)
-        buttons_widget.setStyleSheet(f"background-color: {COLOR_BACKGROUND};")
+        buttons_widget = QWidget(self.window_widget)
         buttons_layout = QHBoxLayout(buttons_widget)
         buttons_layout.setContentsMargins(15, 0, 15, 15)
         buttons_layout.addStretch()
