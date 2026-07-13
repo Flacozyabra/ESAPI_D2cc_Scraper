@@ -116,13 +116,13 @@ class MainWindow(QMainWindow):
         results_grid = QGridLayout()
         results_grid.setSpacing(10)
         results_grid.setColumnStretch(0, 3)  # Орган (ComboBox)
-        results_grid.setColumnStretch(1, 2)  # Рассчитанная доза (Value)
-        results_grid.setColumnStretch(2, 4)  # Статус/информация
+        results_grid.setColumnStretch(1, 2)  # Разовая доза (SD)
+        results_grid.setColumnStretch(2, 2)  # Суммарная доза (TD)
         
         # Заголовки колонок
         results_grid.addWidget(QLabel("<b>Орган / Структура</b>", self), 0, 0)
-        results_grid.addWidget(QLabel("<b>Доза (Gy)</b>", self), 0, 1)
-        results_grid.addWidget(QLabel("<b>Статус</b>", self), 0, 2)
+        results_grid.addWidget(QLabel("<b>SD</b>", self), 0, 1)
+        results_grid.addWidget(QLabel("<b>TD</b>", self), 0, 2)
         
         self.organ_widgets = {}
         organs = [("rectum", "Rectum"), ("bladder", "Bladder"), ("sigmoid", "Sigmoid"), ("bowel", "Bowel")]
@@ -134,21 +134,22 @@ class MainWindow(QMainWindow):
             cb.setPlaceholderText(f"Выбор {organ_title}...")
             results_grid.addWidget(cb, idx, 0)
             
-            # Метка для вывода значения дозы
-            lbl_dose = QLabel("-", self)
-            lbl_dose.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            lbl_dose.setStyleSheet("background-color: #121212; border: 1px solid #2d2d2d; border-radius: 4px; padding: 4px;")
-            results_grid.addWidget(lbl_dose, idx, 1)
+            # Метка для вывода значения разовой дозы (SD)
+            lbl_sd = QLabel("-", self)
+            lbl_sd.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            lbl_sd.setStyleSheet("background-color: #121212; border: 1px solid #2d2d2d; border-radius: 4px; padding: 4px;")
+            results_grid.addWidget(lbl_sd, idx, 1)
             
-            # Метка для вывода статуса/ошибки
-            lbl_status = QLabel("Ожидание плана", self)
-            lbl_status.setStyleSheet("color: #808080;")
-            results_grid.addWidget(lbl_status, idx, 2)
+            # Метка для вывода значения суммарной дозы (TD)
+            lbl_td = QLabel("-", self)
+            lbl_td.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            lbl_td.setStyleSheet("background-color: #121212; border: 1px solid #2d2d2d; border-radius: 4px; padding: 4px;")
+            results_grid.addWidget(lbl_td, idx, 2)
             
             self.organ_widgets[organ_key] = {
                 "combo": cb,
-                "dose_label": lbl_dose,
-                "status_label": lbl_status,
+                "sd_label": lbl_sd,
+                "td_label": lbl_td,
                 "title": organ_title
             }
             
@@ -286,9 +287,10 @@ class MainWindow(QMainWindow):
         # Сбрасываем старые данные органов
         for widget in self.organ_widgets.values():
             widget["combo"].clear()
-            widget["dose_label"].setText("-")
-            widget["status_label"].setText("Выберите план лечения")
-            widget["status_label"].setStyleSheet("color: #808080;")
+            widget["sd_label"].setText("-")
+            widget["td_label"].setText("-")
+            widget["sd_label"].setStyleSheet("background-color: #121212; border: 1px solid #2d2d2d; border-radius: 4px; padding: 4px; color: #808080;")
+            widget["td_label"].setStyleSheet("background-color: #121212; border: 1px solid #2d2d2d; border-radius: 4px; padding: 4px; color: #808080;")
             widget["combo"].setStyleSheet("")
             
         self.txt_plan_id.clear()
@@ -314,13 +316,11 @@ class MainWindow(QMainWindow):
             if matched_structure:
                 cb.setCurrentText(matched_structure)
                 cb.setStyleSheet(get_organ_field_style(is_valid=True))
-                widget["status_label"].setText("Структура найдена")
-                widget["status_label"].setStyleSheet("color: #4CAF50;")
+                cb.setToolTip("Структура успешно найдена автопоиском.")
             else:
                 # Если совпадение не найдено, подсвечиваем поле красным
                 cb.setStyleSheet(get_organ_field_style(is_valid=False))
-                widget["status_label"].setText("Требуется ручной выбор")
-                widget["status_label"].setStyleSheet("color: #d13438; font-weight: bold;")
+                cb.setToolTip("Структура не найдена. Выберите её вручную из списка.")
                 
             # Подключаем валидацию рамки при ручном изменении выбора
             cb.currentTextChanged.connect(lambda text, key=organ_key: self.validate_organ_field(key, text))
@@ -347,12 +347,10 @@ class MainWindow(QMainWindow):
         cb = widget["combo"]
         if text.strip() in self.all_structures:
             cb.setStyleSheet(get_organ_field_style(is_valid=True))
-            widget["status_label"].setText("Выбрано вручную")
-            widget["status_label"].setStyleSheet("color: #007acc;")
+            cb.setToolTip("Выбрано вручную.")
         else:
             cb.setStyleSheet(get_organ_field_style(is_valid=False))
-            widget["status_label"].setText("Не найдено")
-            widget["status_label"].setStyleSheet("color: #d13438;")
+            cb.setToolTip("Выбранная структура отсутствует в плане.")
         self.check_calculation_readiness()
 
     # --- Логика расчета ---
@@ -371,9 +369,10 @@ class MainWindow(QMainWindow):
         organs_mapping = {}
         for organ_key, widget in self.organ_widgets.items():
             organs_mapping[organ_key] = widget["combo"].currentText().strip()
-            widget["dose_label"].setText("-")
-            widget["status_label"].setText("Расчет...")
-            widget["status_label"].setStyleSheet("color: #808080;")
+            widget["sd_label"].setText("-")
+            widget["td_label"].setText("...")
+            widget["sd_label"].setStyleSheet("background-color: #121212; border: 1px solid #2d2d2d; border-radius: 4px; padding: 4px; color: #808080;")
+            widget["td_label"].setStyleSheet("background-color: #121212; border: 1px solid #2d2d2d; border-radius: 4px; padding: 4px; color: #808080;")
             
         self.lbl_status.setText("Выполняется расчет...")
         self.btn_calculate.setEnabled(False)
@@ -390,18 +389,16 @@ class MainWindow(QMainWindow):
         for organ_key, res in results.items():
             widget = self.organ_widgets[organ_key]
             
-            # Выводим дозу
-            if res["dose"]:
-                widget["dose_label"].setText(res["dose"])
-            else:
-                widget["dose_label"].setText("-")
-                
-            # Выводим статус
-            widget["status_label"].setText(res["status"])
             if res["is_valid"]:
-                widget["status_label"].setStyleSheet("color: #4CAF50;")  # Зеленый
+                widget["sd_label"].setText(res["sd"])
+                widget["td_label"].setText(res["td"])
+                widget["sd_label"].setStyleSheet("background-color: #121212; border: 1px solid #2d2d2d; border-radius: 4px; padding: 4px; color: #4CAF50; font-weight: bold;")
+                widget["td_label"].setStyleSheet("background-color: #121212; border: 1px solid #2d2d2d; border-radius: 4px; padding: 4px; color: #4CAF50; font-weight: bold;")
             else:
-                widget["status_label"].setStyleSheet("color: #f44336;")  # Красный
+                widget["sd_label"].setText("-")
+                widget["td_label"].setText(res.get("error_msg", "Ошибка"))
+                widget["sd_label"].setStyleSheet("background-color: #121212; border: 1px solid #2d2d2d; border-radius: 4px; padding: 4px; color: #f44336;")
+                widget["td_label"].setStyleSheet("background-color: #121212; border: 1px solid #2d2d2d; border-radius: 4px; padding: 4px; color: #f44336; font-size: 11px;")
                 
         self.lbl_status.setText("Расчет успешно завершен.")
         self.lbl_status.setStyleSheet("color: #4CAF50;")

@@ -223,15 +223,18 @@ class EsapiWorker(QThread):
             # Получаем все структуры плана
             structures = {str(s.Id).lower(): s for s in plan.StructureSet.Structures}
             
+            # Получаем количество фракций
+            num_fractions = plan.NumberOfFractions
+            
             # Выполняем расчет для каждого органа
             for organ_type, target_struct_id in organs_mapping.items():
                 if not target_struct_id:
-                    results[organ_type] = {"id": "", "dose": "", "status": "Не выбрано", "is_valid": False}
+                    results[organ_type] = {"id": "", "sd": "-", "td": "-", "is_valid": False, "error_msg": "Не выбрано"}
                     continue
                     
                 struct = structures.get(target_struct_id.lower())
                 if struct is None:
-                    results[organ_type] = {"id": target_struct_id, "dose": "", "status": "Не найдено", "is_valid": False}
+                    results[organ_type] = {"id": target_struct_id, "sd": "-", "td": "-", "is_valid": False, "error_msg": "Не найдено"}
                     continue
                 
                 # Проверка объема структуры
@@ -239,9 +242,10 @@ class EsapiWorker(QThread):
                 if struct_vol < volume:
                     results[organ_type] = {
                         "id": str(struct.Id),
-                        "dose": "",
-                        "status": f"Объем структуры < {volume} cc",
-                        "is_valid": False
+                        "sd": "-",
+                        "td": "-",
+                        "is_valid": False,
+                        "error_msg": f"Объем < {volume} cc"
                     }
                     continue
                 
@@ -267,9 +271,10 @@ class EsapiWorker(QThread):
                     if dose_value is None or is_undefined:
                         results[organ_type] = {
                             "id": str(struct.Id),
-                            "dose": "",
-                            "status": "Нет дозы в плане",
-                            "is_valid": False
+                            "sd": "-",
+                            "td": "-",
+                            "is_valid": False,
+                            "error_msg": "Нет дозы"
                         }
                     else:
                         dose_val = dose_value.Dose
@@ -281,18 +286,27 @@ class EsapiWorker(QThread):
                         elif "Gy" not in unit_str:
                             unit_str = "Gy"
                             
+                        # Рассчитываем разовую дозу SD (Single Dose)
+                        sd_val = None
+                        if num_fractions is not None and num_fractions > 0:
+                            sd_val = dose_val / num_fractions
+                            
+                        sd_str = f"{sd_val:.2f} {unit_str}" if sd_val is not None else "-"
+                        td_str = f"{dose_val:.2f} {unit_str}"
+                        
                         results[organ_type] = {
                             "id": str(struct.Id),
-                            "dose": f"{dose_val:.3f} {unit_str}",
-                            "status": "Успешно",
+                            "sd": sd_str,
+                            "td": td_str,
                             "is_valid": True
                         }
                 except Exception as ex:
                     results[organ_type] = {
                         "id": str(struct.Id),
-                        "dose": "",
-                        "status": f"Ошибка: {ex}",
-                        "is_valid": False
+                        "sd": "-",
+                        "td": "-",
+                        "is_valid": False,
+                        "error_msg": f"Ошибка: {ex}"
                     }
             
             self.calculation_completed.emit(results)
