@@ -215,12 +215,12 @@ class MainWindow(QMainWindow):
             
             lbl_sd = QLabel("n/a", self)
             lbl_sd.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            lbl_sd.setStyleSheet("background-color: #121212; border: 1px solid #2d2d2d; border-radius: 6px; padding: 4px; color: #808080; min-height: 24px;")
+            lbl_sd.setStyleSheet("background-color: #0f0f0f; border: 1px solid #3d3d3d; border-radius: 6px; padding: 4px; color: #808080; min-height: 24px;")
             results_grid.addWidget(lbl_sd, idx, 1)
             
             lbl_td = QLabel("n/a", self)
             lbl_td.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            lbl_td.setStyleSheet("background-color: #121212; border: 1px solid #2d2d2d; border-radius: 6px; padding: 4px; color: #808080; min-height: 24px;")
+            lbl_td.setStyleSheet("background-color: #0f0f0f; border: 1px solid #3d3d3d; border-radius: 6px; padding: 4px; color: #808080; min-height: 24px;")
             results_grid.addWidget(lbl_td, idx, 2)
             
             self.organ_widgets[organ_key] = {
@@ -397,8 +397,8 @@ class MainWindow(QMainWindow):
             
             widget["sd_label"].setText("n/a")
             widget["td_label"].setText("n/a")
-            widget["sd_label"].setStyleSheet("background-color: #121212; border: 1px solid #2d2d2d; border-radius: 6px; padding: 4px; color: #808080; min-height: 24px;")
-            widget["td_label"].setStyleSheet("background-color: #121212; border: 1px solid #2d2d2d; border-radius: 6px; padding: 4px; color: #808080; min-height: 24px;")
+            widget["sd_label"].setStyleSheet("background-color: #0f0f0f; border: 1px solid #3d3d3d; border-radius: 6px; padding: 4px; color: #808080; min-height: 24px;")
+            widget["td_label"].setStyleSheet("background-color: #0f0f0f; border: 1px solid #3d3d3d; border-radius: 6px; padding: 4px; color: #808080; min-height: 24px;")
             widget["combo"].setStyleSheet("")
             
         self.txt_plan_id.clear()
@@ -488,8 +488,8 @@ class MainWindow(QMainWindow):
                 
             widget["sd_label"].setText("n/a")
             widget["td_label"].setText("...")
-            widget["sd_label"].setStyleSheet("background-color: #121212; border: 1px solid #2d2d2d; border-radius: 6px; padding: 4px; color: #808080; min-height: 24px;")
-            widget["td_label"].setStyleSheet("background-color: #121212; border: 1px solid #2d2d2d; border-radius: 6px; padding: 4px; color: #808080; min-height: 24px;")
+            widget["sd_label"].setStyleSheet("background-color: #0f0f0f; border: 1px solid #3d3d3d; border-radius: 6px; padding: 4px; color: #808080; min-height: 24px;")
+            widget["td_label"].setStyleSheet("background-color: #0f0f0f; border: 1px solid #3d3d3d; border-radius: 6px; padding: 4px; color: #808080; min-height: 24px;")
             
         self.write_log(f"Запущен расчет D2cc на объем {volume} cc для плана '{plan_id}'...", "info")
         self.btn_calculate.setEnabled(False)
@@ -509,14 +509,14 @@ class MainWindow(QMainWindow):
             if res["is_valid"]:
                 widget["sd_label"].setText(res["sd"])
                 widget["td_label"].setText(res["td"])
-                widget["sd_label"].setStyleSheet("background-color: #121212; border: 1px solid #2d2d2d; border-radius: 6px; padding: 4px; color: #4CAF50; font-weight: bold; min-height: 24px;")
-                widget["td_label"].setStyleSheet("background-color: #121212; border: 1px solid #2d2d2d; border-radius: 6px; padding: 4px; color: #4CAF50; font-weight: bold; min-height: 24px;")
+                widget["sd_label"].setStyleSheet("background-color: #0f0f0f; border: 1px solid #3d3d3d; border-radius: 6px; padding: 4px; color: #4CAF50; font-weight: bold; min-height: 24px;")
+                widget["td_label"].setStyleSheet("background-color: #0f0f0f; border: 1px solid #3d3d3d; border-radius: 6px; padding: 4px; color: #4CAF50; font-weight: bold; min-height: 24px;")
                 self.write_log(f"[{widget['title']}] Расчет успешен. SD: {res['sd']}, TD: {res['td']}", "success")
             else:
                 widget["sd_label"].setText("n/a")
                 widget["td_label"].setText(res.get("error_msg", "Ошибка"))
-                widget["sd_label"].setStyleSheet("background-color: #121212; border: 1px solid #2d2d2d; border-radius: 6px; padding: 4px; color: #f44336; min-height: 24px;")
-                widget["td_label"].setStyleSheet("background-color: #121212; border: 1px solid #2d2d2d; border-radius: 6px; padding: 4px; color: #f44336; font-size: 11px; min-height: 24px;")
+                widget["sd_label"].setStyleSheet("background-color: #0f0f0f; border: 1px solid #3d3d3d; border-radius: 6px; padding: 4px; color: #f44336; min-height: 24px;")
+                widget["td_label"].setStyleSheet("background-color: #0f0f0f; border: 1px solid #3d3d3d; border-radius: 6px; padding: 4px; color: #f44336; font-size: 11px; min-height: 24px;")
                 self.write_log(f"[{widget['title']}] Ошибка расчета: {res.get('error_msg')}", "error")
                 
         self.write_log("Расчет успешно завершен.", "success")

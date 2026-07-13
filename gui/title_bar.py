@@ -42,7 +42,7 @@ class TitleBar(QWidget):
                 height: 40px;
             }}
             QPushButton:hover {{
-                background-color: {COLOR_SURFACE};
+                background-color: #323232;
             }}
             QPushButton#CloseButton:hover {{
                 background-color: #e81123;
