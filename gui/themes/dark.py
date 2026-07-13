@@ -246,28 +246,32 @@ QScrollBar::add-page:horizontal, QScrollBar::sub-page:horizontal {{
     background: none;
 }}
 
-/* Списки (например, боковое меню настроек) */
-QListWidget {{
+/* Боковое меню настроек (#settingsSidebar) */
+#settingsSidebar {{
     background-color: #141414;
     border: none;
     border-right: 1px solid #282828;
+    outline: 0;
+    padding-top: 10px;
 }}
 
-QListWidget::item {{
-    padding: 8px 12px;
-    margin: 3px 6px;
-    border-radius: 5px;
+#settingsSidebar::item {{
+    background-color: transparent;
     color: #a0a0a0;
+    padding: 8px 12px;
+    border-radius: 5px;
+    margin: 3px 6px;
+    font-size: 13px;
 }}
 
-QListWidget::item:hover {{
+#settingsSidebar::item:hover {{
     background-color: #222222;
-    color: {COLOR_TEXT};
+    color: #ffffff;
 }}
 
-QListWidget::item:selected {{
+#settingsSidebar::item:selected {{
     background-color: {COLOR_ACCENT};
-    color: white;
+    color: #ffffff;
 }}
 """
 
