@@ -21,11 +21,11 @@ QDialog {{
     background-color: transparent;
 }}
 
-/* Главный контейнер окон с рамкой и скруглением */
+/* Главный контейнер окон с рамкой (прямые углы) */
 #MainWindowWidget, #SettingsWindowWidget {{
     background-color: {COLOR_BACKGROUND};
     border: 1px solid {COLOR_BORDER};
-    border-radius: 8px;
+    border-radius: 0px;
 }}
 
 QWidget {{
@@ -172,9 +172,9 @@ QPushButton#LogToggleButton {{
     border-left: none;
     border-right: none;
     color: {COLOR_TEXT_MUTED};
-    font-size: 10px;
+    font-size: 14px;
     font-weight: bold;
-    height: 16px;
+    height: 12px;
     padding: 0px;
     border-radius: 0px;
 }}

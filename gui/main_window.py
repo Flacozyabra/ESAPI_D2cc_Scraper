@@ -55,7 +55,9 @@ class MainWindow(QMainWindow):
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setStyleSheet(DARK_THEME_STYLE)
-        self.resize(520, 580)
+        # Устанавливаем фиксированную ширину и переключаемую высоту
+        self.setFixedWidth(520)
+        self.setFixedHeight(580)
         
         # Внешний layout для отступа под тень
         outer_layout = QVBoxLayout()
@@ -187,7 +189,7 @@ class MainWindow(QMainWindow):
         
         # --- Секция лога и разделителя-кнопки ---
         # Кнопка-стрелка для сворачивания/разворачивания лога
-        self.btn_toggle_log = QPushButton("▼ СКРЫТЬ ЛОГ ▼", self)
+        self.btn_toggle_log = QPushButton("▲", self)
         self.btn_toggle_log.setObjectName("LogToggleButton")
         self.btn_toggle_log.clicked.connect(self.toggle_log)
         main_layout.addWidget(self.btn_toggle_log)
@@ -252,10 +254,12 @@ class MainWindow(QMainWindow):
         """Сворачивает / разворачивает лог при нажатии на разделитель."""
         if self.log_view.isVisible():
             self.log_view.setVisible(False)
-            self.btn_toggle_log.setText("▲ ПОКАЗАТЬ ЛОГ ▲")
+            self.btn_toggle_log.setText("▼")
+            self.setFixedHeight(460)  # Стягиваем нижний край вверх
         else:
             self.log_view.setVisible(True)
-            self.btn_toggle_log.setText("▼ СКРЫТЬ ЛОГ ▼")
+            self.btn_toggle_log.setText("▲")
+            self.setFixedHeight(580)  # Растягиваем вниз
 
     # --- Обработка подключения ESAPI ---
     def on_connection_status(self, success, message):
@@ -466,7 +470,5 @@ class MainWindow(QMainWindow):
             self.worker.request_action("connect")
 
     def on_error(self, message):
-        self.lbl_status.setText("Ошибка!")
-        self.lbl_status.setStyleSheet("color: #f44336;")
         self.write_log(message, "error")
         self.check_calculation_readiness()
