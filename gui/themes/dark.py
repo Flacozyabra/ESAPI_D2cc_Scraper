@@ -34,10 +34,10 @@ QWidget {{
     color: {COLOR_TEXT};
 }}
 
-/* Тонкие светлые рамки вокруг отделов (прямые углы) */
+/* Тонкие светлые рамки вокруг отделов со скруглением 6px */
 #InputGroup, #ResultsGroup, #SettingsGroup {{
     border: 1px solid {COLOR_BORDER};
-    border-radius: 0px;
+    border-radius: 6px;
     background-color: transparent;
 }}
 
@@ -58,7 +58,8 @@ QLineEdit {{
     background-color: {COLOR_SURFACE};
     border: 1px solid {COLOR_BORDER};
     border-radius: 6px;
-    padding: 6px 10px;
+    padding: 4px 8px;
+    min-height: 24px;
     color: {COLOR_TEXT};
 }}
 
@@ -70,7 +71,8 @@ QComboBox {{
     background-color: {COLOR_SURFACE};
     border: 1px solid {COLOR_BORDER};
     border-radius: 6px;
-    padding: 5px 10px;
+    padding: 4px 8px;
+    min-height: 24px;
     color: {COLOR_TEXT};
     min-width: 60px;
 }}
@@ -167,6 +169,16 @@ QTextEdit#LogView {{
     font-family: "Consolas", "Courier New", monospace;
     font-size: 11px;
     padding: 5px;
+}}
+
+/* Сплиттер-разделитель (прозрачный фон, высота 8px как в DICOM WatchDog) */
+QPushButton#LogToggleButton {{
+    background-color: transparent;
+    border: none;
+    height: 8px;
+    padding: 0px;
+    margin: 0px;
+    border-radius: 0px;
 }}
 
 /* QScrollBar полностью из DICOM WatchDog */

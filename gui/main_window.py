@@ -9,12 +9,13 @@ from core.esapi_worker import EsapiWorker
 from core.config import load_config
 
 class LogToggleButton(QPushButton):
-    """Кастомная кнопка-разделитель с отрисовкой сплюснутой стрелочки через QPainter."""
+    """Кастомный сплиттер-кнопка из DICOM WatchDog с тонкой линией и сплюснутой стрелочкой."""
     def __init__(self, text="", parent=None):
         super().__init__(parent)
         self.is_collapsed = False
         self.setMouseTracking(True)
         self.setObjectName("LogToggleButton")
+        self.setFixedHeight(8)
 
     def enterEvent(self, event):
         self.update()
@@ -28,40 +29,35 @@ class LogToggleButton(QPushButton):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         
-        # Фон кнопки (в тон текстового поля лога)
-        bg_color = QColor("#161616")
-        if self.underMouse():
-            bg_color = QColor("#222222")
-        painter.fillRect(self.rect(), bg_color)
-        
-        # Тонкие границы сверху и снизу
-        painter.setPen(QColor("#2d2d2d"))
-        painter.drawLine(0, 0, self.width(), 0)
-        painter.setPen(QColor("#141414"))
-        painter.drawLine(0, self.height() - 1, self.width(), self.height() - 1)
-        
-        # Рисуем сплюснутую стрелочку
-        cx = self.width() // 2
+        # Прозрачный фон
+        # Рисуем линию по центру (сплиттерная линия, как в DICOM WatchDog)
+        w = self.width()
         cy = self.height() // 2
+        painter.setPen(QColor("#3F3F46"))
+        painter.drawLine(15, cy, w - 15, cy)
         
-        arrow_color = QColor("#a0a0a0")
+        # Вычисляем геометрический центр
+        cx = w // 2
+        
+        # Цвет стрелки (серый по умолчанию, синий при наведении как в DICOM WatchDog)
+        arrow_color = QColor("#71717A")
         if self.underMouse():
-            arrow_color = QColor("#ffffff")
+            arrow_color = QColor("#1f538d")
             
         painter.setPen(Qt.PenStyle.NoPen)
         painter.setBrush(QBrush(arrow_color))
         
-        # Сплюснутый треугольник (ширина 22px, высота всего 4px)
+        # Сплюснутый треугольник (ширина основания 20px, высота 4px)
         if self.is_collapsed:
-            # Стрелочка вниз (▼)
-            p1 = QPoint(cx - 11, cy - 2)
-            p2 = QPoint(cx + 11, cy - 2)
-            p3 = QPoint(cx, cy + 2)
+            # Стрелка вниз (▼)
+            p1 = QPoint(cx, cy + 2)
+            p2 = QPoint(cx - 10, cy - 2)
+            p3 = QPoint(cx + 10, cy - 2)
         else:
-            # Стрелочка вверх (▲)
-            p1 = QPoint(cx - 11, cy + 2)
-            p2 = QPoint(cx + 11, cy + 2)
-            p3 = QPoint(cx, cy - 2)
+            # Стрелка вверх (▲)
+            p1 = QPoint(cx, cy - 2)
+            p2 = QPoint(cx - 10, cy + 2)
+            p3 = QPoint(cx + 10, cy + 2)
             
         poly = QPolygon([p1, p2, p3])
         painter.drawPolygon(poly)
@@ -116,14 +112,14 @@ class MainWindow(QMainWindow):
         
         # Устанавливаем фиксированную ширину и переключаемую высоту
         self.setFixedWidth(520)
-        self.setFixedHeight(550)  # Высота по умолчанию (с открытым логом)
+        self.setFixedHeight(560)  # Высота по умолчанию (с открытым логом, увеличена под высоту полей)
         
         # Внешний layout для отступа под тень
         outer_layout = QVBoxLayout()
         outer_layout.setContentsMargins(5, 5, 5, 5)
         outer_layout.setSpacing(0)
         
-        # Главный виджет контейнера (для отрисовки тени и границы)
+        # Главный виджет контейнера
         self.window_widget = QWidget(self)
         self.window_widget.setObjectName("MainWindowWidget")
         outer_layout.addWidget(self.window_widget)
@@ -219,12 +215,12 @@ class MainWindow(QMainWindow):
             
             lbl_sd = QLabel("n/a", self)
             lbl_sd.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            lbl_sd.setStyleSheet("background-color: #121212; border: 1px solid #2d2d2d; border-radius: 4px; padding: 4px; color: #808080;")
+            lbl_sd.setStyleSheet("background-color: #121212; border: 1px solid #2d2d2d; border-radius: 6px; padding: 4px; color: #808080; min-height: 24px;")
             results_grid.addWidget(lbl_sd, idx, 1)
             
             lbl_td = QLabel("n/a", self)
             lbl_td.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            lbl_td.setStyleSheet("background-color: #121212; border: 1px solid #2d2d2d; border-radius: 4px; padding: 4px; color: #808080;")
+            lbl_td.setStyleSheet("background-color: #121212; border: 1px solid #2d2d2d; border-radius: 6px; padding: 4px; color: #808080; min-height: 24px;")
             results_grid.addWidget(lbl_td, idx, 2)
             
             self.organ_widgets[organ_key] = {
@@ -246,7 +242,7 @@ class MainWindow(QMainWindow):
         
         main_layout.addWidget(content_widget)
         
-        # --- Секция лога и кнопки-разделителя ---
+        # --- Секция лога и разделителя-кнопки ---
         self.btn_toggle_log = LogToggleButton(parent=self)
         main_layout.addWidget(self.btn_toggle_log)
         
@@ -313,12 +309,12 @@ class MainWindow(QMainWindow):
             self.log_view.setVisible(False)
             self.btn_toggle_log.is_collapsed = True
             self.btn_toggle_log.update()
-            self.setFixedHeight(430)  # Стягиваем нижний край вверх (без лога)
+            self.setFixedHeight(440)  # Стягиваем нижний край вверх (без лога, скорректировано под 24px поля)
         else:
             self.log_view.setVisible(True)
             self.btn_toggle_log.is_collapsed = False
             self.btn_toggle_log.update()
-            self.setFixedHeight(550)  # Растягиваем вниз (с логом)
+            self.setFixedHeight(560)  # Растягиваем вниз (с логом)
 
     # --- Обработка подключения ESAPI ---
     def on_connection_status(self, success, message):
@@ -401,8 +397,8 @@ class MainWindow(QMainWindow):
             
             widget["sd_label"].setText("n/a")
             widget["td_label"].setText("n/a")
-            widget["sd_label"].setStyleSheet("background-color: #121212; border: 1px solid #2d2d2d; border-radius: 4px; padding: 4px; color: #808080;")
-            widget["td_label"].setStyleSheet("background-color: #121212; border: 1px solid #2d2d2d; border-radius: 4px; padding: 4px; color: #808080;")
+            widget["sd_label"].setStyleSheet("background-color: #121212; border: 1px solid #2d2d2d; border-radius: 6px; padding: 4px; color: #808080; min-height: 24px;")
+            widget["td_label"].setStyleSheet("background-color: #121212; border: 1px solid #2d2d2d; border-radius: 6px; padding: 4px; color: #808080; min-height: 24px;")
             widget["combo"].setStyleSheet("")
             
         self.txt_plan_id.clear()
@@ -492,8 +488,8 @@ class MainWindow(QMainWindow):
                 
             widget["sd_label"].setText("n/a")
             widget["td_label"].setText("...")
-            widget["sd_label"].setStyleSheet("background-color: #121212; border: 1px solid #2d2d2d; border-radius: 4px; padding: 4px; color: #808080;")
-            widget["td_label"].setStyleSheet("background-color: #121212; border: 1px solid #2d2d2d; border-radius: 4px; padding: 4px; color: #808080;")
+            widget["sd_label"].setStyleSheet("background-color: #121212; border: 1px solid #2d2d2d; border-radius: 6px; padding: 4px; color: #808080; min-height: 24px;")
+            widget["td_label"].setStyleSheet("background-color: #121212; border: 1px solid #2d2d2d; border-radius: 6px; padding: 4px; color: #808080; min-height: 24px;")
             
         self.write_log(f"Запущен расчет D2cc на объем {volume} cc для плана '{plan_id}'...", "info")
         self.btn_calculate.setEnabled(False)
@@ -513,14 +509,14 @@ class MainWindow(QMainWindow):
             if res["is_valid"]:
                 widget["sd_label"].setText(res["sd"])
                 widget["td_label"].setText(res["td"])
-                widget["sd_label"].setStyleSheet("background-color: #121212; border: 1px solid #2d2d2d; border-radius: 4px; padding: 4px; color: #4CAF50; font-weight: bold;")
-                widget["td_label"].setStyleSheet("background-color: #121212; border: 1px solid #2d2d2d; border-radius: 4px; padding: 4px; color: #4CAF50; font-weight: bold;")
+                widget["sd_label"].setStyleSheet("background-color: #121212; border: 1px solid #2d2d2d; border-radius: 6px; padding: 4px; color: #4CAF50; font-weight: bold; min-height: 24px;")
+                widget["td_label"].setStyleSheet("background-color: #121212; border: 1px solid #2d2d2d; border-radius: 6px; padding: 4px; color: #4CAF50; font-weight: bold; min-height: 24px;")
                 self.write_log(f"[{widget['title']}] Расчет успешен. SD: {res['sd']}, TD: {res['td']}", "success")
             else:
                 widget["sd_label"].setText("n/a")
                 widget["td_label"].setText(res.get("error_msg", "Ошибка"))
-                widget["sd_label"].setStyleSheet("background-color: #121212; border: 1px solid #2d2d2d; border-radius: 4px; padding: 4px; color: #f44336;")
-                widget["td_label"].setStyleSheet("background-color: #121212; border: 1px solid #2d2d2d; border-radius: 4px; padding: 4px; color: #f44336; font-size: 11px;")
+                widget["sd_label"].setStyleSheet("background-color: #121212; border: 1px solid #2d2d2d; border-radius: 6px; padding: 4px; color: #f44336; min-height: 24px;")
+                widget["td_label"].setStyleSheet("background-color: #121212; border: 1px solid #2d2d2d; border-radius: 6px; padding: 4px; color: #f44336; font-size: 11px; min-height: 24px;")
                 self.write_log(f"[{widget['title']}] Ошибка расчета: {res.get('error_msg')}", "error")
                 
         self.write_log("Расчет успешно завершен.", "success")
