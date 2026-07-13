@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
-from PyQt6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QListWidget, QStackedWidget, QWidget, QLabel, QLineEdit, QPushButton, QFileDialog, QGraphicsDropShadowEffect
+from PyQt6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QListWidget, QStackedWidget, QWidget, QLabel, QLineEdit, QPushButton, QFileDialog, QGraphicsDropShadowEffect, QFrame
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QColor
 from .title_bar import TitleBar
 from .themes.dark import DARK_THEME_STYLE
-from core.config import load_config, save_config
 
 class SettingsWindow(QDialog):
     def __init__(self, parent=None):
@@ -12,13 +11,14 @@ class SettingsWindow(QDialog):
         self.parent = parent
         
         # Загрузка текущих настроек
-        self.config = load_config()
+        self.config = self.parent.config if parent else {}
         
         self.init_ui()
 
     def init_ui(self):
-        # Настройка безрамочного окна и прозрачного фона для скругленных углов
-        self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowSystemMenuHint)
+        # Настройка безрамочного окна и прозрачного фона.
+        # Важно: добавляем Qt.WindowType.Window, чтобы окно не обрезалось границами родительского окна и могло перемещаться в любое место экрана.
+        self.setWindowFlags(Qt.WindowType.Window | Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowSystemMenuHint)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setWindowModality(Qt.WindowModality.ApplicationModal)
         self.setStyleSheet(DARK_THEME_STYLE)
@@ -29,7 +29,7 @@ class SettingsWindow(QDialog):
         outer_layout.setContentsMargins(5, 5, 5, 5)
         outer_layout.setSpacing(0)
         
-        # Главный контейнер (для QSS границы и скругления)
+        # Главный контейнер (для QSS границы и прямых углов)
         self.window_widget = QWidget(self)
         self.window_widget.setObjectName("SettingsWindowWidget")
         outer_layout.addWidget(self.window_widget)
@@ -53,23 +53,31 @@ class SettingsWindow(QDialog):
         main_layout.addWidget(self.title_bar)
         
         # Центральный контейнер
-        content_widget = QWidget(self.window_widget)
-        content_layout = QHBoxLayout(content_widget)
-        content_layout.setContentsMargins(15, 15, 15, 15)
+        content_container = QWidget(self.window_widget)
+        content_container_layout = QVBoxLayout(content_container)
+        content_container_layout.setContentsMargins(15, 15, 15, 10)
+        
+        # Оборачиваем настройки в рамку SettingsGroup
+        settings_group = QFrame(content_container)
+        settings_group.setObjectName("SettingsGroup")
+        content_container_layout.addWidget(settings_group)
+        
+        content_layout = QHBoxLayout(settings_group)
+        content_layout.setContentsMargins(10, 10, 10, 10)
         content_layout.setSpacing(15)
         
         # Левая панель - список разделов
-        self.list_sections = QListWidget(self)
+        self.list_sections = QListWidget(settings_group)
         self.list_sections.setFixedWidth(120)
         self.list_sections.addItem("General")
         self.list_sections.setCurrentRow(0)
         content_layout.addWidget(self.list_sections)
         
         # Правая панель - содержимое
-        self.stacked_widget = QStackedWidget(self)
+        self.stacked_widget = QStackedWidget(settings_group)
         
         # Раздел General
-        self.general_widget = QWidget(self)
+        self.general_widget = QWidget(settings_group)
         gen_layout = QVBoxLayout(self.general_widget)
         gen_layout.setContentsMargins(0, 0, 0, 0)
         gen_layout.setSpacing(10)
@@ -91,7 +99,7 @@ class SettingsWindow(QDialog):
         self.stacked_widget.addWidget(self.general_widget)
         content_layout.addWidget(self.stacked_widget)
         
-        main_layout.addWidget(content_widget)
+        main_layout.addWidget(content_container)
         
         # Нижняя панель с кнопками
         buttons_widget = QWidget(self.window_widget)
@@ -117,5 +125,6 @@ class SettingsWindow(QDialog):
     def save_settings(self):
         # Сохранение настроек
         self.config["eclipse_bin_path"] = self.txt_path.text().strip()
+        from core.config import save_config
         save_config(self.config)
         self.accept()

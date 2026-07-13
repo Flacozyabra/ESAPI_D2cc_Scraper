@@ -34,6 +34,13 @@ QWidget {{
     color: {COLOR_TEXT};
 }}
 
+/* Тонкие светлые рамки вокруг отделов (прямые углы) */
+#InputGroup, #ResultsGroup, #SettingsGroup {{
+    border: 1px solid {COLOR_BORDER};
+    border-radius: 0px;
+    background-color: transparent;
+}}
+
 /* Заголовки и метки */
 QLabel {{
     color: {COLOR_TEXT};
@@ -162,25 +169,69 @@ QTextEdit#LogView {{
     padding: 5px;
 }}
 
-/* Сплюснутая кнопка-стрелка для скрытия лога */
-QPushButton#LogToggleButton {{
-    background-color: #161616;
-    border-top: 1px solid #2d2d2d;
-    border-bottom: 1px solid #141414;
-    border-left: none;
-    border-right: none;
-    color: {COLOR_TEXT_MUTED};
-    font-size: 14px;
-    font-weight: bold;
-    height: 8px; /* Сильно приплюснутая кнопка */
-    padding: 0px;
+/* QScrollBar полностью из DICOM WatchDog */
+QScrollBar:vertical {{
+    background-color: #121212;
+    width: 10px;
     margin: 0px;
-    border-radius: 0px;
+    border: none;
 }}
 
-QPushButton#LogToggleButton:hover {{
-    background-color: #222222;
-    color: {COLOR_TEXT};
+QScrollBar::handle:vertical {{
+    background-color: #3e3e3e;
+    min-height: 20px;
+    border-radius: 5px;
+}}
+
+QScrollBar::handle:vertical:hover {{
+    background-color: #525252;
+}}
+
+QScrollBar::handle:vertical:pressed {{
+    background-color: #686868;
+}}
+
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{
+    border: none;
+    background: none;
+    height: 0px;
+    width: 0px;
+}}
+
+QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {{
+    background: none;
+}}
+
+QScrollBar:horizontal {{
+    background-color: #121212;
+    height: 10px;
+    margin: 0px;
+    border: none;
+}}
+
+QScrollBar::handle:horizontal {{
+    background-color: #3e3e3e;
+    min-width: 20px;
+    border-radius: 5px;
+}}
+
+QScrollBar::handle:horizontal:hover {{
+    background-color: #525252;
+}}
+
+QScrollBar::handle:horizontal:pressed {{
+    background-color: #686868;
+}}
+
+QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {{
+    border: none;
+    background: none;
+    height: 0px;
+    width: 0px;
+}}
+
+QScrollBar::add-page:horizontal, QScrollBar::sub-page:horizontal {{
+    background: none;
 }}
 
 /* Списки (например, боковое меню настроек) */
@@ -205,28 +256,6 @@ QListWidget::item:hover {{
 QListWidget::item:selected {{
     background-color: {COLOR_ACCENT};
     color: white;
-}}
-
-/* Скроллбары */
-QScrollBar:vertical {{
-    border: none;
-    background: #121212;
-    width: 8px;
-    margin: 0px;
-}}
-
-QScrollBar::handle:vertical {{
-    background: #3e3e3e;
-    min-height: 20px;
-    border-radius: 4px;
-}}
-
-QScrollBar::handle:vertical:hover {{
-    background: #525252;
-}}
-
-QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{
-    height: 0px;
 }}
 """
 

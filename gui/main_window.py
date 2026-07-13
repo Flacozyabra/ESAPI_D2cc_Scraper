@@ -1,12 +1,71 @@
 # -*- coding: utf-8 -*-
-from PyQt6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QGridLayout, QLabel, QLineEdit, QComboBox, QPushButton, QCompleter, QTextEdit, QGraphicsDropShadowEffect
-from PyQt6.QtCore import Qt, QTimer, QStringListModel
-from PyQt6.QtGui import QDoubleValidator, QColor
+from PyQt6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QGridLayout, QLabel, QLineEdit, QComboBox, QPushButton, QCompleter, QTextEdit, QGraphicsDropShadowEffect, QFrame
+from PyQt6.QtCore import Qt, QTimer, QStringListModel, QPoint
+from PyQt6.QtGui import QDoubleValidator, QColor, QPainter, QPolygon, QBrush
 from .title_bar import TitleBar
 from .settings_window import SettingsWindow
 from .themes.dark import DARK_THEME_STYLE, get_organ_field_style
 from core.esapi_worker import EsapiWorker
 from core.config import load_config
+
+class LogToggleButton(QPushButton):
+    """Кастомная кнопка-разделитель с отрисовкой сплюснутой стрелочки через QPainter."""
+    def __init__(self, text="", parent=None):
+        super().__init__(parent)
+        self.is_collapsed = False
+        self.setMouseTracking(True)
+        self.setObjectName("LogToggleButton")
+
+    def enterEvent(self, event):
+        self.update()
+        super().enterEvent(event)
+
+    def leaveEvent(self, event):
+        self.update()
+        super().leaveEvent(event)
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        
+        # Фон кнопки (в тон текстового поля лога)
+        bg_color = QColor("#161616")
+        if self.underMouse():
+            bg_color = QColor("#222222")
+        painter.fillRect(self.rect(), bg_color)
+        
+        # Тонкие границы сверху и снизу
+        painter.setPen(QColor("#2d2d2d"))
+        painter.drawLine(0, 0, self.width(), 0)
+        painter.setPen(QColor("#141414"))
+        painter.drawLine(0, self.height() - 1, self.width(), self.height() - 1)
+        
+        # Рисуем сплюснутую стрелочку
+        cx = self.width() // 2
+        cy = self.height() // 2
+        
+        arrow_color = QColor("#a0a0a0")
+        if self.underMouse():
+            arrow_color = QColor("#ffffff")
+            
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(QBrush(arrow_color))
+        
+        # Сплюснутый треугольник (ширина 22px, высота всего 4px)
+        if self.is_collapsed:
+            # Стрелочка вниз (▼)
+            p1 = QPoint(cx - 11, cy - 2)
+            p2 = QPoint(cx + 11, cy - 2)
+            p3 = QPoint(cx, cy + 2)
+        else:
+            # Стрелочка вверх (▲)
+            p1 = QPoint(cx - 11, cy + 2)
+            p2 = QPoint(cx + 11, cy + 2)
+            p3 = QPoint(cx, cy - 2)
+            
+        poly = QPolygon([p1, p2, p3])
+        painter.drawPolygon(poly)
+
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -97,11 +156,15 @@ class MainWindow(QMainWindow):
         content_layout.setContentsMargins(20, 20, 20, 10)
         content_layout.setSpacing(15)
         
-        # Сетка ввода (Patient Name, Patient ID, Plan ID, Volume)
+        # --- ОТДЕЛ ВВОДА: в рамке InputGroup ---
+        self.input_group = QFrame(self.window_widget)
+        self.input_group.setObjectName("InputGroup")
+        input_group_layout = QVBoxLayout(self.input_group)
+        input_group_layout.setContentsMargins(12, 12, 12, 12)
+        
         input_grid = QGridLayout()
         input_grid.setSpacing(10)
         
-        # Строка 1: Patient Name и Patient ID
         input_grid.addWidget(QLabel("Patient Name:", self), 0, 0)
         self.txt_name = QLineEdit(self)
         self.txt_name.setPlaceholderText("Фамилия Имя...")
@@ -112,7 +175,6 @@ class MainWindow(QMainWindow):
         self.txt_id.setPlaceholderText("ID пациента...")
         input_grid.addWidget(self.txt_id, 0, 3)
         
-        # Строка 2: Plan ID и Volume
         input_grid.addWidget(QLabel("Plan ID:", self), 1, 0)
         self.txt_plan_id = QLineEdit(self)
         self.txt_plan_id.setPlaceholderText("Имя плана...")
@@ -125,23 +187,23 @@ class MainWindow(QMainWindow):
         self.txt_volume.setValidator(volume_validator)
         input_grid.addWidget(self.txt_volume, 1, 3)
         
-        content_layout.addLayout(input_grid)
+        input_group_layout.addLayout(input_grid)
+        content_layout.addWidget(self.input_group)
         
-        # Разделительная линия
-        line = QWidget(self)
-        line.setFixedHeight(1)
-        line.setStyleSheet("background-color: #2d2d2d;")
-        content_layout.addWidget(line)
+        # --- ОТДЕЛ РЕЗУЛЬТАТОВ: в рамке ResultsGroup ---
+        self.results_group = QFrame(self.window_widget)
+        self.results_group.setObjectName("ResultsGroup")
+        results_group_layout = QVBoxLayout(self.results_group)
+        results_group_layout.setContentsMargins(12, 12, 12, 12)
         
-        # Сетка результатов
         results_grid = QGridLayout()
         results_grid.setSpacing(10)
-        results_grid.setColumnStretch(0, 3)  # Орган (ComboBox)
+        results_grid.setColumnStretch(0, 3)  # OAR (ComboBox)
         results_grid.setColumnStretch(1, 2)  # SD
         results_grid.setColumnStretch(2, 2)  # TD
         
         # Заголовки колонок
-        results_grid.addWidget(QLabel("<b>Орган / Структура</b>", self), 0, 0)
+        results_grid.addWidget(QLabel("<b>OAR</b>", self), 0, 0)
         results_grid.addWidget(QLabel("<b>SD</b>", self), 0, 1)
         results_grid.addWidget(QLabel("<b>TD</b>", self), 0, 2)
         
@@ -151,7 +213,8 @@ class MainWindow(QMainWindow):
         for idx, (organ_key, organ_title) in enumerate(organs, start=1):
             cb = QComboBox(self)
             cb.setEditable(True)
-            cb.setPlaceholderText(f"Выбор {organ_title}...")
+            cb.addItem("n/a")
+            cb.setCurrentText("n/a")
             results_grid.addWidget(cb, idx, 0)
             
             lbl_sd = QLabel("n/a", self)
@@ -171,7 +234,8 @@ class MainWindow(QMainWindow):
                 "title": organ_title
             }
             
-        content_layout.addLayout(results_grid)
+        results_group_layout.addLayout(results_grid)
+        content_layout.addWidget(self.results_group)
         
         # Кнопка расчета
         self.btn_calculate = QPushButton("Рассчитать D2cc", self)
@@ -182,11 +246,8 @@ class MainWindow(QMainWindow):
         
         main_layout.addWidget(content_widget)
         
-        # --- Секция лога и разделителя-кнопки ---
-        # Кнопка-стрелка для сворачивания/разворачивания лога
-        self.btn_toggle_log = QPushButton("▲", self)
-        self.btn_toggle_log.setObjectName("LogToggleButton")
-        self.btn_toggle_log.clicked.connect(self.toggle_log)
+        # --- Секция лога и кнопки-разделителя ---
+        self.btn_toggle_log = LogToggleButton(parent=self)
         main_layout.addWidget(self.btn_toggle_log)
         
         # Текстовое поле лога
@@ -224,6 +285,7 @@ class MainWindow(QMainWindow):
         self.txt_name.textEdited.connect(self.on_name_edited)
         self.txt_id.textEdited.connect(self.on_id_edited)
         self.txt_plan_id.textEdited.connect(self.check_calculation_readiness)
+        self.btn_toggle_log.clicked.connect(self.toggle_log)
         
         self.name_completer.activated[str].connect(self.on_name_selected)
         self.id_completer.activated[str].connect(self.on_id_selected)
@@ -249,11 +311,13 @@ class MainWindow(QMainWindow):
         """Сворачивает / разворачивает лог при нажатии на разделитель."""
         if self.log_view.isVisible():
             self.log_view.setVisible(False)
-            self.btn_toggle_log.setText("▼")
+            self.btn_toggle_log.is_collapsed = True
+            self.btn_toggle_log.update()
             self.setFixedHeight(430)  # Стягиваем нижний край вверх (без лога)
         else:
             self.log_view.setVisible(True)
-            self.btn_toggle_log.setText("▲")
+            self.btn_toggle_log.is_collapsed = False
+            self.btn_toggle_log.update()
             self.setFixedHeight(550)  # Растягиваем вниз (с логом)
 
     # --- Обработка подключения ESAPI ---
@@ -328,7 +392,13 @@ class MainWindow(QMainWindow):
         
         # Сбрасываем старые данные органов
         for widget in self.organ_widgets.values():
-            widget["combo"].clear()
+            cb = widget["combo"]
+            cb.blockSignals(True)
+            cb.clear()
+            cb.addItem("n/a")
+            cb.setCurrentText("n/a")
+            cb.blockSignals(False)
+            
             widget["sd_label"].setText("n/a")
             widget["td_label"].setText("n/a")
             widget["sd_label"].setStyleSheet("background-color: #121212; border: 1px solid #2d2d2d; border-radius: 4px; padding: 4px; color: #808080;")
@@ -351,8 +421,11 @@ class MainWindow(QMainWindow):
         # Заполняем комбобоксы всеми структурами плана
         for organ_key, widget in self.organ_widgets.items():
             cb = widget["combo"]
+            cb.blockSignals(True)
             cb.clear()
+            cb.addItem("n/a")
             cb.addItems(self.all_structures)
+            cb.blockSignals(False)
             
             # Автопоиск по синонимам
             matched_structure = self.find_structure_match(organ_key)
@@ -362,6 +435,7 @@ class MainWindow(QMainWindow):
                 cb.setToolTip("Структура успешно найдена автопоиском.")
                 self.write_log(f"[{widget['title']}] Автоподстановка: '{matched_structure}'", "info")
             else:
+                cb.setCurrentText("n/a")
                 cb.setStyleSheet(get_organ_field_style(is_valid=False))
                 cb.setToolTip("Структура не найдена. Выберите её вручную из списка.")
                 self.write_log(f"[{widget['title']}] Структура автопоиском не найдена. Выберите вручную.", "warning")
@@ -385,7 +459,10 @@ class MainWindow(QMainWindow):
     def validate_organ_field(self, organ_key, text):
         widget = self.organ_widgets[organ_key]
         cb = widget["combo"]
-        if text.strip() in self.all_structures:
+        if text.strip() == "n/a" or not text.strip():
+            cb.setStyleSheet(get_organ_field_style(is_valid=False))
+            cb.setToolTip("Ничего не выбрано.")
+        elif text.strip() in self.all_structures:
             cb.setStyleSheet(get_organ_field_style(is_valid=True))
             cb.setToolTip("Выбрано вручную.")
         else:
@@ -407,7 +484,12 @@ class MainWindow(QMainWindow):
         # Формируем карту сопоставления органов
         organs_mapping = {}
         for organ_key, widget in self.organ_widgets.items():
-            organs_mapping[organ_key] = widget["combo"].currentText().strip()
+            val = widget["combo"].currentText().strip()
+            if val == "n/a" or not val:
+                organs_mapping[organ_key] = ""
+            else:
+                organs_mapping[organ_key] = val
+                
             widget["sd_label"].setText("n/a")
             widget["td_label"].setText("...")
             widget["sd_label"].setStyleSheet("background-color: #121212; border: 1px solid #2d2d2d; border-radius: 4px; padding: 4px; color: #808080;")
