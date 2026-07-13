@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
 
-# Палитра темной темы
-COLOR_BACKGROUND = "#1e1e1e"
-COLOR_HEADER = "#121212"
-COLOR_SURFACE = "#2d2d2d"
-COLOR_BORDER = "#3e3e42"
-COLOR_BORDER_FOCUS = "#007acc"
-COLOR_TEXT = "#e1e1e1"
-COLOR_TEXT_MUTED = "#808080"
-COLOR_ACCENT = "#007acc"
-COLOR_ACCENT_HOVER = "#1c97ea"
-COLOR_ERROR = "#d13438"  # Красный для ненайденных органов
+# Палитра темы DICOM WatchDog
+COLOR_BACKGROUND = "#202020"
+COLOR_HEADER = "#1a1a1a"
+COLOR_SURFACE = "#0f0f0f"
+COLOR_BORDER = "#3d3d3d"
+COLOR_BORDER_FOCUS = "#1f538d"
+COLOR_TEXT = "#ffffff"
+COLOR_TEXT_MUTED = "#a0a0a0"
+COLOR_ACCENT = "#1f538d"
+COLOR_ACCENT_HOVER = "#2a69a5"
+COLOR_ERROR = "#d13438"
 
 DARK_THEME_STYLE = f"""
 QMainWindow {{
@@ -21,7 +21,7 @@ QDialog {{
     background-color: transparent;
 }}
 
-/* Главный контейнер окон с рамкой (прямые углы) */
+/* Главный контейнер окон с рамкой (прямые углы) как в DICOM WatchDog */
 #MainWindowWidget, #SettingsWindowWidget {{
     background-color: {COLOR_BACKGROUND};
     border: 1px solid {COLOR_BORDER};
@@ -29,7 +29,7 @@ QDialog {{
 }}
 
 QWidget {{
-    font-family: "Segoe UI", "Arial", sans-serif;
+    font-family: "Segoe UI", -apple-system, Roboto, Helvetica, Arial, sans-serif;
     font-size: 13px;
     color: {COLOR_TEXT};
 }}
@@ -50,7 +50,7 @@ QLabel#TitleLabel {{
 QLineEdit {{
     background-color: {COLOR_SURFACE};
     border: 1px solid {COLOR_BORDER};
-    border-radius: 5px;
+    border-radius: 6px;
     padding: 6px 10px;
     color: {COLOR_TEXT};
 }}
@@ -62,7 +62,7 @@ QLineEdit:focus {{
 QComboBox {{
     background-color: {COLOR_SURFACE};
     border: 1px solid {COLOR_BORDER};
-    border-radius: 5px;
+    border-radius: 6px;
     padding: 5px 10px;
     color: {COLOR_TEXT};
     min-width: 60px;
@@ -103,26 +103,25 @@ QComboBox QAbstractItemView {{
 
 /* Кнопки */
 QPushButton {{
-    background-color: {COLOR_SURFACE};
-    border: 1px solid {COLOR_BORDER};
-    border-radius: 5px;
+    background-color: {COLOR_ACCENT};
+    border: none;
+    border-radius: 6px;
     padding: 6px 14px;
-    font-weight: 500;
+    font-weight: normal;
     color: {COLOR_TEXT};
 }}
 
 QPushButton:hover {{
-    background-color: #3e3e42;
-    border: 1px solid #5e5e62;
+    background-color: {COLOR_ACCENT_HOVER};
 }}
 
 QPushButton:pressed {{
-    background-color: #1c1c1c;
+    background-color: #1a4675;
 }}
 
 QPushButton#CalculateButton {{
     background-color: {COLOR_ACCENT};
-    border: 1px solid {COLOR_ACCENT};
+    border: none;
     color: white;
     font-weight: bold;
     font-size: 14px;
@@ -133,13 +132,12 @@ QPushButton#CalculateButton:hover {{
 }}
 
 QPushButton#CalculateButton:pressed {{
-    background-color: #005a9e;
+    background-color: #1a4675;
 }}
 
 QPushButton#CalculateButton:disabled {{
-    background-color: #2a2a2b;
-    border: 1px solid #333335;
-    color: #555555;
+    background-color: #26384d;
+    color: #709bc1;
 }}
 
 QPushButton#SettingsButton {{
@@ -153,47 +151,55 @@ QPushButton#SettingsButton:hover {{
     border-radius: 4px;
 }}
 
-/* Поле Лога */
+/* Поле Лога как QPlainTextEdit в DICOM WatchDog */
 QTextEdit#LogView {{
-    background-color: #0f0f10;
-    border: 1px solid #252526;
-    border-radius: 4px;
-    color: #b0b0b0;
+    background-color: #161616;
+    border: 1px solid #2d2d2d;
+    border-radius: 6px;
+    color: #ebebeb;
     font-family: "Consolas", "Courier New", monospace;
     font-size: 11px;
     padding: 5px;
 }}
 
-/* Сплиттер-разделитель для сворачивания лога */
+/* Сплюснутая кнопка-стрелка для скрытия лога */
 QPushButton#LogToggleButton {{
-    background-color: #1a1a1b;
+    background-color: #161616;
     border-top: 1px solid #2d2d2d;
-    border-bottom: 1px solid #121212;
+    border-bottom: 1px solid #141414;
     border-left: none;
     border-right: none;
     color: {COLOR_TEXT_MUTED};
     font-size: 14px;
     font-weight: bold;
-    height: 12px;
+    height: 8px; /* Сильно приплюснутая кнопка */
     padding: 0px;
+    margin: 0px;
     border-radius: 0px;
 }}
 
 QPushButton#LogToggleButton:hover {{
-    background-color: #242426;
+    background-color: #222222;
     color: {COLOR_TEXT};
 }}
 
-/* Списки (например, в настройках) */
+/* Списки (например, боковое меню настроек) */
 QListWidget {{
-    background-color: {COLOR_HEADER};
-    border: 1px solid {COLOR_BORDER};
-    border-radius: 5px;
+    background-color: #141414;
+    border: none;
+    border-right: 1px solid #282828;
 }}
 
 QListWidget::item {{
     padding: 8px 12px;
-    border-bottom: 1px solid {COLOR_BORDER};
+    margin: 3px 6px;
+    border-radius: 5px;
+    color: #a0a0a0;
+}}
+
+QListWidget::item:hover {{
+    background-color: #222222;
+    color: {COLOR_TEXT};
 }}
 
 QListWidget::item:selected {{
@@ -204,19 +210,19 @@ QListWidget::item:selected {{
 /* Скроллбары */
 QScrollBar:vertical {{
     border: none;
-    background: {COLOR_BACKGROUND};
+    background: #121212;
     width: 8px;
     margin: 0px;
 }}
 
 QScrollBar::handle:vertical {{
-    background: {COLOR_BORDER};
+    background: #3e3e3e;
     min-height: 20px;
     border-radius: 4px;
 }}
 
 QScrollBar::handle:vertical:hover {{
-    background: #505054;
+    background: #525252;
 }}
 
 QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{

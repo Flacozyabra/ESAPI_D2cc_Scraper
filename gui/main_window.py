@@ -46,25 +46,25 @@ class MainWindow(QMainWindow):
         self.setup_connections()
         
         # Инициализация ESAPI подключения
-        self.lbl_status.setText("Подключение к ESAPI...")
         self.write_log("Запуск приложения. Попытка подключения к ESAPI...", "info")
         self.worker.request_action("connect")
 
     def init_ui(self):
-        # Настройка главного окна: безрамочность и прозрачный фон для скругленных углов
+        # Настройка главного окна: безрамочность и прозрачный фон
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setStyleSheet(DARK_THEME_STYLE)
+        
         # Устанавливаем фиксированную ширину и переключаемую высоту
         self.setFixedWidth(520)
-        self.setFixedHeight(580)
+        self.setFixedHeight(550)  # Высота по умолчанию (с открытым логом)
         
         # Внешний layout для отступа под тень
         outer_layout = QVBoxLayout()
         outer_layout.setContentsMargins(5, 5, 5, 5)
         outer_layout.setSpacing(0)
         
-        # Главный виджет контейнера (для отрисовки тени и скругленных углов в QSS)
+        # Главный виджет контейнера (для отрисовки тени и границы)
         self.window_widget = QWidget(self)
         self.window_widget.setObjectName("MainWindowWidget")
         outer_layout.addWidget(self.window_widget)
@@ -180,11 +180,6 @@ class MainWindow(QMainWindow):
         self.btn_calculate.clicked.connect(self.start_calculation)
         content_layout.addWidget(self.btn_calculate)
         
-        # Статус-бар над логом
-        self.lbl_status = QLabel("Готов к работе", self)
-        self.lbl_status.setStyleSheet("color: #808080; font-size: 11px; padding-top: 2px;")
-        content_layout.addWidget(self.lbl_status)
-        
         main_layout.addWidget(content_widget)
         
         # --- Секция лога и разделителя-кнопки ---
@@ -242,12 +237,12 @@ class MainWindow(QMainWindow):
     def write_log(self, message, level="info"):
         """Записывает строку лога с цветовым форматированием в нижнее текстовое поле."""
         color_map = {
-            "info": "#b0b0b0",
+            "info": "#ebebeb",
             "warning": "#e6a23c",
             "error": "#f56c6c",
             "success": "#67c23a"
         }
-        color = color_map.get(level, "#b0b0b0")
+        color = color_map.get(level, "#ebebeb")
         self.log_view.append(f'<span style="color: {color};">[{level.upper()}] {message}</span>')
 
     def toggle_log(self):
@@ -255,22 +250,17 @@ class MainWindow(QMainWindow):
         if self.log_view.isVisible():
             self.log_view.setVisible(False)
             self.btn_toggle_log.setText("▼")
-            self.setFixedHeight(460)  # Стягиваем нижний край вверх
+            self.setFixedHeight(430)  # Стягиваем нижний край вверх (без лога)
         else:
             self.log_view.setVisible(True)
             self.btn_toggle_log.setText("▲")
-            self.setFixedHeight(580)  # Растягиваем вниз
+            self.setFixedHeight(550)  # Растягиваем вниз (с логом)
 
     # --- Обработка подключения ESAPI ---
     def on_connection_status(self, success, message):
         if success:
-            self.lbl_status.setText("Подключение к ESAPI успешно установлено.")
-            self.lbl_status.setStyleSheet("color: #4CAF50;")
             self.write_log(message, "success")
         else:
-            # Не вызываем MessageBox, просто логируем ошибку
-            self.lbl_status.setText("ESAPI DLL не подключен.")
-            self.lbl_status.setStyleSheet("color: #f44336;")
             self.write_log(f"Не удалось загрузить библиотеки ESAPI: {message}", "error")
             self.write_log("Пожалуйста, откройте настройки (шестеренка вверху) и укажите корректный путь к DLL ESAPI.", "warning")
 
@@ -308,19 +298,16 @@ class MainWindow(QMainWindow):
 
     # --- Загрузка пациента ---
     def on_name_selected(self, name):
-        self.lbl_status.setText(f"Загрузка пациента по имени: {name}...")
         self.write_log(f"Запрос загрузки пациента по имени: {name}...", "info")
         self.worker.request_action("load_patient", patient_id_or_name=name, is_id=False)
 
     def on_id_selected(self, patient_id):
-        self.lbl_status.setText(f"Загрузка пациента по ID: {patient_id}...")
         self.write_log(f"Запрос загрузки пациента по ID: {patient_id}...", "info")
         self.worker.request_action("load_patient", patient_id_or_name=patient_id, is_id=True)
 
     def load_patient_by_field(self, is_id=True):
         field_text = self.txt_id.text().strip() if is_id else self.txt_name.text().strip()
         if field_text:
-            self.lbl_status.setText(f"Загрузка пациента: {field_text}...")
             self.write_log(f"Загрузка пациента: {field_text}...", "info")
             self.worker.request_action("load_patient", patient_id_or_name=field_text, is_id=is_id)
 
@@ -350,7 +337,6 @@ class MainWindow(QMainWindow):
             
         self.txt_plan_id.clear()
         self.txt_plan_id.setFocus()
-        self.lbl_status.setText(f"Пациент {patient_name} успешно загружен.")
         self.write_log(f"Пациент {patient_name} (ID: {patient_id}) загружен. Найдено планов: {len(plans)}.", "success")
         self.check_calculation_readiness()
 
@@ -427,7 +413,6 @@ class MainWindow(QMainWindow):
             widget["sd_label"].setStyleSheet("background-color: #121212; border: 1px solid #2d2d2d; border-radius: 4px; padding: 4px; color: #808080;")
             widget["td_label"].setStyleSheet("background-color: #121212; border: 1px solid #2d2d2d; border-radius: 4px; padding: 4px; color: #808080;")
             
-        self.lbl_status.setText("Выполняется расчет...")
         self.write_log(f"Запущен расчет D2cc на объем {volume} cc для плана '{plan_id}'...", "info")
         self.btn_calculate.setEnabled(False)
         
@@ -456,8 +441,7 @@ class MainWindow(QMainWindow):
                 widget["td_label"].setStyleSheet("background-color: #121212; border: 1px solid #2d2d2d; border-radius: 4px; padding: 4px; color: #f44336; font-size: 11px;")
                 self.write_log(f"[{widget['title']}] Ошибка расчета: {res.get('error_msg')}", "error")
                 
-        self.lbl_status.setText("Расчет успешно завершен.")
-        self.lbl_status.setStyleSheet("color: #4CAF50;")
+        self.write_log("Расчет успешно завершен.", "success")
         self.check_calculation_readiness()
 
     # --- Вспомогательные методы ---
@@ -465,7 +449,6 @@ class MainWindow(QMainWindow):
         settings_dialog = SettingsWindow(self)
         if settings_dialog.exec():
             self.config = load_config()
-            self.lbl_status.setText("Настройки сохранены. Подключение к ESAPI...")
             self.write_log("Путь к DLL обновлен. Переподключение к ESAPI...", "info")
             self.worker.request_action("connect")
 
