@@ -96,7 +96,7 @@ def find_structure(structures, target_name):
     return None
 
 
-def calculate_d2cc(patient_id, course_id, plan_id):
+def calculate_d2cc(patient_id, plan_id):
     """
     Основная функция подключения к Eclipse, загрузки плана и расчета D2cc.
     """
@@ -113,26 +113,18 @@ def calculate_d2cc(patient_id, course_id, plan_id):
             print(f"[ERROR] Пациент с ID '{patient_id}' не найден.")
             return
 
-        print(f"Поиск курса: '{course_id}'...")
-        course = None
-        for c in patient.Courses:
-            if c.Id.lower() == course_id.lower():
-                course = c
-                break
-                
-        if course is None:
-            print(f"[ERROR] Курс '{course_id}' не найден для пациента '{patient_id}'.")
-            return
-
-        print(f"Поиск плана: '{plan_id}'...")
+        print(f"Поиск плана: '{plan_id}' по всем курсам...")
         plan = None
-        for p in course.PlanSetups:
-            if p.Id.lower() == plan_id.lower():
-                plan = p
+        for course in patient.Courses:
+            for p in course.PlanSetups:
+                if p.Id.lower() == plan_id.lower():
+                    plan = p
+                    break
+            if plan is not None:
                 break
 
         if plan is None:
-            print(f"[ERROR] План '{plan_id}' не найден в курсе '{course_id}'.")
+            print(f"[ERROR] План '{plan_id}' не найден для пациента '{patient_id}'.")
             return
 
         # Проверка типа плана (поддерживается только ExternalPlanSetup)
@@ -220,7 +212,6 @@ def calculate_d2cc(patient_id, course_id, plan_id):
 if __name__ == "__main__":
     # Параметры по умолчанию (пользователь может переопределить их)
     default_patient_id = "PATIENT_ID"
-    default_course_id = "COURSE_ID"
     default_plan_id = "PLAN_ID"
 
     print("=== ESAPI D2cc Scraper ===")
@@ -231,15 +222,11 @@ if __name__ == "__main__":
         if not patient_id:
             patient_id = default_patient_id
             
-        course_id = input(f"Введите Course ID [{default_course_id}]: ").strip()
-        if not course_id:
-            course_id = default_course_id
-            
         plan_id = input(f"Введите Plan ID [{default_plan_id}]: ").strip()
         if not plan_id:
             plan_id = default_plan_id
 
-        calculate_d2cc(patient_id, course_id, plan_id)
+        calculate_d2cc(patient_id, plan_id)
         safe_exit(0)
     except KeyboardInterrupt:
         print("\nВыполнение прервано пользователем.")
