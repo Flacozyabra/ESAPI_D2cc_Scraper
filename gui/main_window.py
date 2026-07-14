@@ -258,17 +258,20 @@ class MainWindow(QMainWindow):
         self.name_completer.setModel(self.name_completer_model)
         self.name_completer.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
         self.name_completer.setCompletionMode(QCompleter.CompletionMode.UnfilteredPopupCompletion)
+        self.name_completer.popup().setStyleSheet("background-color: #0f0f0f; color: #ffffff; border: 1px solid #3d3d3d; selection-background-color: #1f538d; selection-color: #ffffff;")
         self.txt_name.setCompleter(self.name_completer)
         
         self.id_completer = QCompleter(self)
         self.id_completer.setModel(self.id_completer_model)
         self.id_completer.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
         self.id_completer.setCompletionMode(QCompleter.CompletionMode.UnfilteredPopupCompletion)
+        self.id_completer.popup().setStyleSheet("background-color: #0f0f0f; color: #ffffff; border: 1px solid #3d3d3d; selection-background-color: #1f538d; selection-color: #ffffff;")
         self.txt_id.setCompleter(self.id_completer)
 
         self.plan_completer = QCompleter(self)
         self.plan_completer.setModel(self.plan_completer_model)
         self.plan_completer.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+        self.plan_completer.popup().setStyleSheet("background-color: #0f0f0f; color: #ffffff; border: 1px solid #3d3d3d; selection-background-color: #1f538d; selection-color: #ffffff;")
         self.txt_plan_id.setCompleter(self.plan_completer)
 
     def setup_connections(self):

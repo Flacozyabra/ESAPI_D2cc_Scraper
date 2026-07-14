@@ -148,8 +148,11 @@ class EsapiWorker(QThread):
                     if full_name.lower() == patient_id_or_name.lower():
                         patient_id = s.Id
                         break
-            
             # Закрываем предыдущего пациента и открываем нового
+            try:
+                _app.ClosePatient()
+            except Exception:
+                pass
             patient = _app.OpenPatientById(patient_id)
             if patient is None:
                 self.error_occurred.emit(f"Пациент с ID '{patient_id}' не найден в базе данных.")
@@ -194,7 +197,10 @@ class EsapiWorker(QThread):
             
             if _app is None:
                 _app = CustomScriptExecutable.CreateApplication("d2cc_scraper")
-            
+            try:
+                _app.ClosePatient()
+            except Exception:
+                pass
             patient = _app.OpenPatientById(patient_id)
             if patient is None:
                 self.error_occurred.emit("Пациент не найден перед началом расчета.")

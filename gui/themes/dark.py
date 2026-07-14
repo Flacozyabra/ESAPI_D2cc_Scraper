@@ -102,12 +102,13 @@ QComboBox::down-arrow {{
     margin-right: 8px;
 }}
 
-QComboBox QAbstractItemView {{
+QAbstractItemView {{
     background-color: {COLOR_SURFACE};
     border: 1px solid {COLOR_BORDER};
     selection-background-color: {COLOR_ACCENT};
     selection-color: white;
     outline: 0;
+    color: {COLOR_TEXT};
 }}
 
 /* Кнопки */
