@@ -15,7 +15,7 @@ if %ERRORLEVEL% neq 0 (
 
 :: Step 2: Build EXE with PyInstaller
 echo [2/3] Running PyInstaller...
-python -m PyInstaller --onefile --noconsole --add-data "locales;locales" --name "d2cc_scraper" main.py
+python -m PyInstaller --onefile --noconsole --add-data "locales;locales" --add-data "src;src" --icon="src/Eclipse_logo.ico" --name "d2cc_scraper" main.py
 if %ERRORLEVEL% neq 0 (
     echo [ERROR] Build failed.
     pause

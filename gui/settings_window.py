@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 import sys
+import os
 from PyQt6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QListWidget, QStackedWidget, QWidget, QLabel, QLineEdit, QPushButton, QFileDialog, QDialogButtonBox
 from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QIcon
 from .themes.dark import DARK_THEME_STYLE
 from core.locale import tr
 
@@ -10,6 +12,14 @@ class SettingsWindow(QDialog):
         super().__init__(parent)
         self.parent = parent
         self.setWindowTitle(tr("settings_title"))
+        
+        # Иконка окна настроек
+        if hasattr(sys, '_MEIPASS'):
+            base_path = sys._MEIPASS
+        else:
+            base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        self.setWindowIcon(QIcon(os.path.join(base_path, "src", "Eclipse_logo.png")))
+        
         self.setMinimumWidth(550)
         self.setFixedHeight(320)
         

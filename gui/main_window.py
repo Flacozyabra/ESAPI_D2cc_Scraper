@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
+import sys
+import os
 from PyQt6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QGridLayout, QLabel, QLineEdit, QComboBox, QPushButton, QCompleter, QTextEdit, QGraphicsDropShadowEffect, QFrame
 from PyQt6.QtCore import Qt, QTimer, QStringListModel, QPoint
-from PyQt6.QtGui import QDoubleValidator, QColor, QPainter, QPolygon, QBrush
+from PyQt6.QtGui import QDoubleValidator, QColor, QPainter, QPolygon, QBrush, QIcon
 from .title_bar import TitleBar
 from .settings_window import SettingsWindow
 from .themes.dark import DARK_THEME_STYLE, get_organ_field_style
@@ -106,6 +108,13 @@ class MainWindow(QMainWindow):
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setStyleSheet(DARK_THEME_STYLE)
+        
+        # Иконка окна
+        if hasattr(sys, '_MEIPASS'):
+            base_path = sys._MEIPASS
+        else:
+            base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        self.setWindowIcon(QIcon(os.path.join(base_path, "src", "Eclipse_logo.png")))
         
         # Устанавливаем фиксированную ширину (600) и переключаемую высоту
         self.setFixedWidth(600)
