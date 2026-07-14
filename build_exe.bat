@@ -15,7 +15,7 @@ if %ERRORLEVEL% neq 0 (
 
 :: Step 2: Build EXE with PyInstaller
 echo [2/3] Running PyInstaller...
-python -m PyInstaller --clean --onefile --noconsole --add-data "locales;locales" --add-data "src;src" --icon="src\Eclipse_logo.ico" --name "d2cc_scraper" main.py
+python -m PyInstaller --clean --onefile --noconsole --add-data "locales;locales" --add-data "src;src" --icon="src\Eclipse_logo.ico" --name "ESAPI_D2cc_Scraper" main.py
 if %ERRORLEVEL% neq 0 (
     echo [ERROR] Build failed.
     pause
@@ -25,10 +25,10 @@ if %ERRORLEVEL% neq 0 (
 :: Step 3: Clean up temporary files
 echo [3/3] Cleaning up temporary build files...
 if exist build rmdir /s /q build
-if exist d2cc_scraper.spec del /f /q d2cc_scraper.spec
+if exist ESAPI_D2cc_Scraper.spec del /f /q ESAPI_D2cc_Scraper.spec
 
 echo ===================================================
 echo Build completed successfully!
-echo Executable is located in: dist\d2cc_scraper.exe
+echo Executable is located in: dist\ESAPI_D2cc_Scraper.exe
 echo ===================================================
 pause
