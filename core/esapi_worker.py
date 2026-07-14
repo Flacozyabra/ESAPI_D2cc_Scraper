@@ -2,7 +2,8 @@
 import os
 import sys
 import ctypes
-from PyQt6.QtCore import QThread, pyqtSignal
+from PyQt6.QtCore import QObject, pyqtSignal
+from PyQt6.QtWidgets import QApplication
 from core.config import load_config
 
 # Глобальный флаг инициализации CLR
@@ -41,7 +42,7 @@ def init_esapi():
     except Exception as e:
         raise Exception(f"Не удалось загрузить библиотеки ESAPI: {e}")
 
-class EsapiWorker(QThread):
+class EsapiWorker(QObject):
     # Сигналы для передачи результатов в главный поток GUI
     connection_status = pyqtSignal(bool, str)
     patient_search_results = pyqtSignal(list, bool)  # (results, search_by_id)
@@ -51,11 +52,10 @@ class EsapiWorker(QThread):
 
     def __init__(self):
         super().__init__()
-        self.action = None
-        self.params = {}
 
-    def run(self):
-        """Точка входа потока."""
+    def request_action(self, action, **kwargs):
+        """Выполняет действие в главном STA потоке GUI."""
+        QApplication.processEvents()
         try:
             init_esapi()
         except Exception as e:
@@ -63,28 +63,22 @@ class EsapiWorker(QThread):
             self.error_occurred.emit(str(e))
             return
 
-        # Выполняем запрошенное действие
-        if self.action == "connect":
-            self._connect()
-        elif self.action == "search_patients":
-            self._search_patients(self.params.get("query"), self.params.get("by_id", True))
-        elif self.action == "load_patient":
-            self._load_patient(self.params.get("patient_id_or_name"), self.params.get("is_id", True))
-        elif self.action == "calculate":
-            self._calculate(
-                self.params.get("patient_id"),
-                self.params.get("plan_id"),
-                self.params.get("organs_mapping"),
-                self.params.get("volume", 2.0)
-            )
-
-    def request_action(self, action, **kwargs):
-        """Запрашивает выполнение действия в потоке."""
-        if self.isRunning():
-            self.wait()  # Ожидаем завершения предыдущего действия, если оно идет
-        self.action = action
-        self.params = kwargs
-        self.start()
+        try:
+            if action == "connect":
+                self._connect()
+            elif action == "search_patients":
+                self._search_patients(kwargs.get("query"), kwargs.get("by_id", True))
+            elif action == "load_patient":
+                self._load_patient(kwargs.get("patient_id_or_name"), kwargs.get("is_id", True))
+            elif action == "calculate":
+                self._calculate(
+                    kwargs.get("patient_id"),
+                    kwargs.get("plan_id"),
+                    kwargs.get("organs_mapping"),
+                    kwargs.get("volume", 2.0)
+                )
+        except Exception as e:
+            self.error_occurred.emit(f"Ошибка при выполнении {action}: {e}")
 
     def _connect(self):
         """Проверяет подключение к ESAPI и инициализирует Application."""
