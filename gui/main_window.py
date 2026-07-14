@@ -7,6 +7,7 @@ from .settings_window import SettingsWindow
 from .themes.dark import DARK_THEME_STYLE, get_organ_field_style
 from core.esapi_worker import EsapiWorker
 from core.config import load_config
+from core.locale import tr
 
 class LogToggleButton(QPushButton):
     """Кастомный сплиттер-кнопка из DICOM WatchDog с тонкой линией и сплюснутой стрелочкой."""
@@ -29,14 +30,12 @@ class LogToggleButton(QPushButton):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         
-        # Прозрачный фон
         # Рисуем линию по центру (сплиттерная линия, как в DICOM WatchDog)
         w = self.width()
         cy = self.height() // 2
         painter.setPen(QColor("#3F3F46"))
         painter.drawLine(15, cy, w - 15, cy)
         
-        # Вычисляем геометрический центр
         cx = w // 2
         
         # Цвет стрелки (серый по умолчанию, синий при наведении как в DICOM WatchDog)
@@ -49,12 +48,10 @@ class LogToggleButton(QPushButton):
         
         # Сплюснутый треугольник (ширина основания 20px, высота 4px)
         if self.is_collapsed:
-            # Стрелка вниз (▼)
             p1 = QPoint(cx, cy + 2)
             p2 = QPoint(cx - 10, cy - 2)
             p3 = QPoint(cx + 10, cy - 2)
         else:
-            # Стрелка вверх (▲)
             p1 = QPoint(cx, cy - 2)
             p2 = QPoint(cx - 10, cy + 2)
             p3 = QPoint(cx + 10, cy + 2)
@@ -101,7 +98,7 @@ class MainWindow(QMainWindow):
         self.setup_connections()
         
         # Инициализация ESAPI подключения
-        self.write_log("Запуск приложения. Попытка подключения к ESAPI...", "info")
+        self.write_log(tr("log_conn_start", default="Starting application. Connecting to ESAPI..."), "info")
         self.worker.request_action("connect")
 
     def init_ui(self):
@@ -110,9 +107,9 @@ class MainWindow(QMainWindow):
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setStyleSheet(DARK_THEME_STYLE)
         
-        # Устанавливаем фиксированную ширину и переключаемую высоту
-        self.setFixedWidth(520)
-        self.setFixedHeight(560)  # Высота по умолчанию (с открытым логом, увеличена под высоту полей)
+        # Устанавливаем фиксированную ширину (600) и переключаемую высоту
+        self.setFixedWidth(600)
+        self.setFixedHeight(560)
         
         # Внешний layout для отступа под тень
         outer_layout = QVBoxLayout()
@@ -142,13 +139,14 @@ class MainWindow(QMainWindow):
         main_layout.setSpacing(0)
         
         # Заголовок (TitleBar)
-        self.title_bar = TitleBar(self, title="ESAPI D2cc Scraper")
+        self.title_bar = TitleBar(self, title=tr("window_title"))
         self.title_bar.btn_settings.clicked.connect(self.open_settings)
         main_layout.addWidget(self.title_bar)
         
-        # Внутренний контейнер для формы
-        content_widget = QWidget(self.window_widget)
-        content_layout = QVBoxLayout(content_widget)
+        # Внутренний контейнер для формы (высота жестко фиксирована 390px, чтобы не сжиматься при скрытии лога)
+        self.content_widget = QWidget(self.window_widget)
+        self.content_widget.setFixedHeight(390)
+        content_layout = QVBoxLayout(self.content_widget)
         content_layout.setContentsMargins(20, 20, 20, 10)
         content_layout.setSpacing(15)
         
@@ -161,31 +159,32 @@ class MainWindow(QMainWindow):
         input_grid = QGridLayout()
         input_grid.setSpacing(10)
         input_grid.setColumnStretch(0, 0)
-        input_grid.setColumnStretch(1, 3)
+        input_grid.setColumnStretch(1, 3)  # Поле Patient Name / Plan ID (длиннее)
         input_grid.setColumnStretch(2, 0)
-        input_grid.setColumnStretch(3, 1)
+        input_grid.setColumnStretch(3, 2)  # Поле ID / Volume (короче, но в два раза шире чем было)
         
-        input_grid.addWidget(QLabel("Patient Name:", self), 0, 0)
+        input_grid.addWidget(QLabel(tr("patient_name"), self), 0, 0)
         self.txt_name = QLineEdit(self)
-        self.txt_name.setPlaceholderText("Фамилия Имя...")
+        self.txt_name.setPlaceholderText(tr("patient_name_placeholder"))
         input_grid.addWidget(self.txt_name, 0, 1)
         
-        input_grid.addWidget(QLabel("ID:", self), 0, 2)
+        input_grid.addWidget(QLabel(tr("patient_id"), self), 0, 2)
         self.txt_id = QLineEdit(self)
-        self.txt_id.setPlaceholderText("ID пациента...")
+        self.txt_id.setPlaceholderText(tr("patient_id_placeholder"))
         input_grid.addWidget(self.txt_id, 0, 3)
         
-        input_grid.addWidget(QLabel("Plan ID:", self), 1, 0)
+        input_grid.addWidget(QLabel(tr("plan_id"), self), 1, 0)
         self.txt_plan_id = QLineEdit(self)
-        self.txt_plan_id.setPlaceholderText("Имя плана...")
+        self.txt_plan_id.setPlaceholderText(tr("plan_id_placeholder"))
         input_grid.addWidget(self.txt_plan_id, 1, 1)
         
-        input_grid.addWidget(QLabel("Vol (cc):", self), 1, 2)
+        input_grid.addWidget(QLabel(tr("volume"), self), 1, 2)
         self.txt_volume = QLineEdit(str(self.config.get("default_volume", 2.0)), self)
+        self.txt_volume.setMaximumWidth(70)  # Ограничиваем ширину поля объема
         volume_validator = QDoubleValidator(0.01, 100.0, 2, self)
         volume_validator.setNotation(QDoubleValidator.Notation.StandardNotation)
         self.txt_volume.setValidator(volume_validator)
-        input_grid.addWidget(self.txt_volume, 1, 3)
+        input_grid.addWidget(self.txt_volume, 1, 3, Qt.AlignmentFlag.AlignLeft)
         
         input_group_layout.addLayout(input_grid)
         content_layout.addWidget(self.input_group)
@@ -198,12 +197,13 @@ class MainWindow(QMainWindow):
         
         results_grid = QGridLayout()
         results_grid.setSpacing(10)
-        results_grid.setColumnStretch(0, 3)  # OAR (ComboBox)
+        results_grid.setColumnStretch(0, 3)  # OAR
         results_grid.setColumnStretch(1, 2)  # SD
         results_grid.setColumnStretch(2, 2)  # TD
         
-        # Заголовки колонок
-        lbl_oar = QLabel("<b>OAR</b>", self)
+        # Заголовки колонок центрированы
+        lbl_oar = QLabel(f"<b>{tr('patient_name').replace(':', '').strip() if 'OAR' in tr('patient_name') else 'OAR'}</b>", self)
+        lbl_oar.setText("<b>OAR</b>")
         lbl_oar.setAlignment(Qt.AlignmentFlag.AlignCenter)
         results_grid.addWidget(lbl_oar, 0, 0)
         
@@ -246,13 +246,13 @@ class MainWindow(QMainWindow):
         content_layout.addWidget(self.results_group)
         
         # Кнопка расчета
-        self.btn_calculate = QPushButton("Рассчитать D2cc", self)
+        self.btn_calculate = QPushButton(tr("btn_calculate"), self)
         self.btn_calculate.setObjectName("CalculateButton")
         self.btn_calculate.setEnabled(False)
         self.btn_calculate.clicked.connect(self.start_calculation)
         content_layout.addWidget(self.btn_calculate)
         
-        main_layout.addWidget(content_widget)
+        main_layout.addWidget(self.content_widget)
         
         # --- Секция лога и разделителя-кнопки ---
         self.btn_toggle_log = LogToggleButton(parent=self)
@@ -326,20 +326,19 @@ class MainWindow(QMainWindow):
             self.log_view.setVisible(False)
             self.btn_toggle_log.is_collapsed = True
             self.btn_toggle_log.update()
-            self.setFixedHeight(440)  # Стягиваем нижний край вверх (без лога, скорректировано под 24px поля)
+            self.setFixedHeight(440)  # Стягиваем нижний край вверх
         else:
             self.log_view.setVisible(True)
             self.btn_toggle_log.is_collapsed = False
             self.btn_toggle_log.update()
-            self.setFixedHeight(560)  # Растягиваем вниз (с логом)
+            self.setFixedHeight(560)  # Растягиваем вниз
 
     # --- Обработка подключения ESAPI ---
     def on_connection_status(self, success, message):
         if success:
             self.write_log(message, "success")
         else:
-            self.write_log(f"Не удалось загрузить библиотеки ESAPI: {message}", "error")
-            self.write_log("Пожалуйста, откройте настройки (шестеренка вверху) и укажите корректный путь к DLL ESAPI.", "warning")
+            self.write_log(message, "error")
 
     # --- Поиск пациентов ---
     def on_name_edited(self, text):
@@ -375,17 +374,17 @@ class MainWindow(QMainWindow):
 
     # --- Загрузка пациента ---
     def on_name_selected(self, name):
-        self.write_log(f"Запрос загрузки пациента по имени: {name}...", "info")
+        self.write_log(tr("log_loading_patient", query=name), "info")
         self.worker.request_action("load_patient", patient_id_or_name=name, is_id=False)
 
     def on_id_selected(self, patient_id):
-        self.write_log(f"Запрос загрузки пациента по ID: {patient_id}...", "info")
+        self.write_log(tr("log_loading_patient", query=patient_id), "info")
         self.worker.request_action("load_patient", patient_id_or_name=patient_id, is_id=True)
 
     def load_patient_by_field(self, is_id=True):
         field_text = self.txt_id.text().strip() if is_id else self.txt_name.text().strip()
         if field_text:
-            self.write_log(f"Загрузка пациента: {field_text}...", "info")
+            self.write_log(tr("log_loading_patient", query=field_text), "info")
             self.worker.request_action("load_patient", patient_id_or_name=field_text, is_id=is_id)
 
     def on_patient_loaded(self, patient_id, patient_name, plans, structures):
@@ -420,7 +419,7 @@ class MainWindow(QMainWindow):
             
         self.txt_plan_id.clear()
         self.txt_plan_id.setFocus()
-        self.write_log(f"Пациент {patient_name} (ID: {patient_id}) загружен. Найдено планов: {len(plans)}.", "success")
+        self.write_log(tr("log_patient_loaded", name=patient_name, id=patient_id, count=len(plans)), "success")
         self.check_calculation_readiness()
 
     # --- Обработка планов и органов ---
@@ -429,7 +428,7 @@ class MainWindow(QMainWindow):
         if not plan_id or plan_id not in self.plans:
             return
             
-        self.write_log(f"Выбран план: '{plan_id}'. Выполняется автопоиск структур...", "info")
+        self.write_log(tr("log_plan_selected", plan_id=plan_id), "info")
         
         # Заполняем комбобоксы всеми структурами плана
         for organ_key, widget in self.organ_widgets.items():
@@ -445,13 +444,12 @@ class MainWindow(QMainWindow):
             if matched_structure:
                 cb.setCurrentText(matched_structure)
                 cb.setStyleSheet(get_organ_field_style(is_valid=True))
-                cb.setToolTip("Структура успешно найдена автопоиском.")
-                self.write_log(f"[{widget['title']}] Автоподстановка: '{matched_structure}'", "info")
+                cb.setToolTip("Structure successfully auto-matched.")
+                self.write_log(f"[{widget['title']}] Auto-match: '{matched_structure}'", "info")
             else:
                 cb.setCurrentText("n/a")
                 cb.setStyleSheet(get_organ_field_style(is_valid=False))
-                cb.setToolTip("Структура не найдена. Выберите её вручную из списка.")
-                self.write_log(f"[{widget['title']}] Структура автопоиском не найдена. Выберите вручную.", "warning")
+                cb.setToolTip("Structure not matched. Select manually.")
                 
             cb.currentTextChanged.connect(lambda text, key=organ_key: self.validate_organ_field(key, text))
             
@@ -474,13 +472,13 @@ class MainWindow(QMainWindow):
         cb = widget["combo"]
         if text.strip() == "n/a" or not text.strip():
             cb.setStyleSheet(get_organ_field_style(is_valid=False))
-            cb.setToolTip("Ничего не выбрано.")
+            cb.setToolTip("No structure selected.")
         elif text.strip() in self.all_structures:
             cb.setStyleSheet(get_organ_field_style(is_valid=True))
-            cb.setToolTip("Выбрано вручную.")
+            cb.setToolTip("Manually selected.")
         else:
             cb.setStyleSheet(get_organ_field_style(is_valid=False))
-            cb.setToolTip("Выбранная структура отсутствует в плане.")
+            cb.setToolTip("Selected structure not found in plan.")
         self.check_calculation_readiness()
 
     # --- Логика расчета ---
@@ -508,7 +506,7 @@ class MainWindow(QMainWindow):
             widget["sd_label"].setStyleSheet("background-color: #0f0f0f; border: 1px solid #3d3d3d; border-radius: 6px; padding: 4px; color: #808080; min-height: 24px;")
             widget["td_label"].setStyleSheet("background-color: #0f0f0f; border: 1px solid #3d3d3d; border-radius: 6px; padding: 4px; color: #808080; min-height: 24px;")
             
-        self.write_log(f"Запущен расчет D2cc на объем {volume} cc для плана '{plan_id}'...", "info")
+        self.write_log(tr("log_calc_start", volume=volume, plan_id=plan_id), "info")
         self.btn_calculate.setEnabled(False)
         
         self.worker.request_action(
@@ -528,15 +526,15 @@ class MainWindow(QMainWindow):
                 widget["td_label"].setText(res["td"])
                 widget["sd_label"].setStyleSheet("background-color: #0f0f0f; border: 1px solid #3d3d3d; border-radius: 6px; padding: 4px; color: #ffffff; min-height: 24px;")
                 widget["td_label"].setStyleSheet("background-color: #0f0f0f; border: 1px solid #3d3d3d; border-radius: 6px; padding: 4px; color: #ffffff; min-height: 24px;")
-                self.write_log(f"[{widget['title']}] Расчет успешен. SD: {res['sd']}, TD: {res['td']}", "success")
+                self.write_log(tr("log_calc_success", organ=widget['title'], sd=res['sd'], td=res['td']), "success")
             else:
                 widget["sd_label"].setText("n/a")
-                widget["td_label"].setText(res.get("error_msg", "Ошибка"))
+                widget["td_label"].setText(res.get("error_msg", "Error"))
                 widget["sd_label"].setStyleSheet("background-color: #0f0f0f; border: 1px solid #3d3d3d; border-radius: 6px; padding: 4px; color: #f44336; min-height: 24px;")
                 widget["td_label"].setStyleSheet("background-color: #0f0f0f; border: 1px solid #3d3d3d; border-radius: 6px; padding: 4px; color: #f44336; font-size: 11px; min-height: 24px;")
-                self.write_log(f"[{widget['title']}] Ошибка расчета: {res.get('error_msg')}", "error")
+                self.write_log(tr("log_calc_error", organ=widget['title'], error=res.get('error_msg')), "error")
                 
-        self.write_log("Расчет успешно завершен.", "success")
+        self.write_log(tr("log_calc_finished"), "success")
         self.check_calculation_readiness()
 
     # --- Вспомогательные методы ---
@@ -544,7 +542,7 @@ class MainWindow(QMainWindow):
         settings_dialog = SettingsWindow(self)
         if settings_dialog.exec():
             self.config = load_config()
-            self.write_log("Путь к DLL обновлен. Переподключение к ESAPI...", "info")
+            self.write_log(tr("log_updating_dll"), "info")
             self.worker.request_action("connect")
 
     def on_error(self, message):

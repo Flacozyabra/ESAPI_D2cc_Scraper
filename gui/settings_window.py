@@ -3,12 +3,13 @@ import sys
 from PyQt6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QListWidget, QStackedWidget, QWidget, QLabel, QLineEdit, QPushButton, QFileDialog, QDialogButtonBox
 from PyQt6.QtCore import Qt
 from .themes.dark import DARK_THEME_STYLE
+from core.locale import tr
 
 class SettingsWindow(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.parent = parent
-        self.setWindowTitle("Настройки")
+        self.setWindowTitle(tr("settings_title"))
         self.setMinimumWidth(550)
         self.setFixedHeight(320)
         
@@ -64,7 +65,7 @@ class SettingsWindow(QDialog):
         # Левая часть: боковое меню (QListWidget)
         self.sidebar = QListWidget()
         self.sidebar.setObjectName("settingsSidebar")
-        self.sidebar.addItem("General")
+        self.sidebar.addItem(tr("sidebar_general"))
         self.sidebar.setCurrentRow(0)
         self.sidebar.setFixedWidth(140)
         main_layout.addWidget(self.sidebar)
@@ -79,14 +80,14 @@ class SettingsWindow(QDialog):
         gen_layout.setContentsMargins(0, 0, 0, 0)
         gen_layout.setSpacing(10)
         
-        lbl_path = QLabel("Путь к DLL Eclipse ESAPI:", self.general_widget)
+        lbl_path = QLabel(tr("lbl_dll_path"), self.general_widget)
         gen_layout.addWidget(lbl_path)
         
         path_box_layout = QHBoxLayout()
         self.txt_path = QLineEdit(self.config.get("eclipse_bin_path", ""), self.general_widget)
         path_box_layout.addWidget(self.txt_path)
         
-        btn_browse = QPushButton("Обзор...", self.general_widget)
+        btn_browse = QPushButton(tr("btn_browse"), self.general_widget)
         btn_browse.clicked.connect(self.browse_folder)
         btn_browse.setFixedWidth(80)
         path_box_layout.addWidget(btn_browse)
@@ -112,7 +113,7 @@ class SettingsWindow(QDialog):
         outer_layout.addLayout(button_layout)
 
     def browse_folder(self):
-        folder = QFileDialog.getExistingDirectory(self, "Выберите папку с DLL ESAPI", self.txt_path.text())
+        folder = QFileDialog.getExistingDirectory(self, tr("dlg_select_dll_folder"), self.txt_path.text())
         if folder:
             self.txt_path.setText(folder)
 

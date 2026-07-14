@@ -5,6 +5,7 @@ import ctypes
 from PyQt6.QtCore import QObject, pyqtSignal
 from PyQt6.QtWidgets import QApplication
 from core.config import load_config
+from core.locale import tr
 
 # Глобальный флаг инициализации CLR
 _ESAPI_INITIALIZED = False
@@ -20,7 +21,7 @@ def init_esapi():
     eclipse_path = config.get("eclipse_bin_path", "")
 
     if not os.path.exists(eclipse_path):
-        raise Exception(f"Путь к DLL ESAPI '{eclipse_path}' не существует. Укажите верный путь в настройках.")
+        raise Exception(tr("log_conn_fail", message=f"Path '{eclipse_path}' does not exist."))
 
     # Добавляем путь в sys.path и PATH
     if eclipse_path not in sys.path:
@@ -40,7 +41,7 @@ def init_esapi():
         _ESAPI_INITIALIZED = True
         return True
     except Exception as e:
-        raise Exception(f"Не удалось загрузить библиотеки ESAPI: {e}")
+        raise Exception(tr("log_conn_fail", message=str(e)))
 
 class EsapiWorker(QObject):
     # Сигналы для передачи результатов в главный поток GUI
@@ -78,7 +79,7 @@ class EsapiWorker(QObject):
                     kwargs.get("volume", 2.0)
                 )
         except Exception as e:
-            self.error_occurred.emit(f"Ошибка при выполнении {action}: {e}")
+            self.error_occurred.emit(tr("err_action_failed", action=action, error=str(e)))
 
     def _connect(self):
         """Проверяет подключение к ESAPI и инициализирует Application."""
@@ -87,9 +88,9 @@ class EsapiWorker(QObject):
             from VMS.TPS.Common.Model.API import CustomScriptExecutable
             if _app is None:
                 _app = CustomScriptExecutable.CreateApplication("d2cc_scraper")
-            self.connection_status.emit(True, "Подключение к ESAPI успешно установлено.")
+            self.connection_status.emit(True, tr("log_conn_success"))
         except Exception as e:
-            self.connection_status.emit(False, f"Ошибка подключения к ESAPI: {e}")
+            self.connection_status.emit(False, tr("log_conn_fail", message=str(e)))
 
     def _search_patients(self, query, by_id=True):
         """Ищет пациентов по ID или фамилии."""
@@ -123,7 +124,7 @@ class EsapiWorker(QObject):
                     
             self.patient_search_results.emit(results, by_id)
         except Exception as e:
-            self.error_occurred.emit(f"Ошибка при поиске пациента: {e}")
+            self.error_occurred.emit(tr("err_search_patient", error=str(e)))
 
     def _load_patient(self, patient_id_or_name, is_id=True):
         """Загружает данные пациента: ФИО, список планов (исключая курс QA) и список всех структур первого плана."""
@@ -142,6 +143,7 @@ class EsapiWorker(QObject):
                     if full_name.lower() == patient_id_or_name.lower():
                         patient_id = s.Id
                         break
+            
             # Закрываем предыдущего пациента и открываем нового
             try:
                 _app.ClosePatient()
@@ -149,7 +151,7 @@ class EsapiWorker(QObject):
                 pass
             patient = _app.OpenPatientById(patient_id)
             if patient is None:
-                self.error_occurred.emit(f"Пациент с ID '{patient_id}' не найден в базе данных.")
+                self.error_occurred.emit(tr("err_patient_not_found", id=patient_id))
                 return
             
             patient_name = f"{patient.LastName} {patient.FirstName}".strip()
@@ -179,7 +181,7 @@ class EsapiWorker(QObject):
                 list(sorted(all_structures))
             )
         except Exception as e:
-            self.error_occurred.emit(f"Ошибка при загрузке данных пациента: {e}")
+            self.error_occurred.emit(tr("err_load_patient", error=str(e)))
 
     def _calculate(self, patient_id, plan_id, organs_mapping, volume=2.0):
         """Выполняет расчет D2cc (или дозы на другой объем) для структур плана."""
@@ -197,7 +199,7 @@ class EsapiWorker(QObject):
                 pass
             patient = _app.OpenPatientById(patient_id)
             if patient is None:
-                self.error_occurred.emit("Пациент не найден перед началом расчета.")
+                self.error_occurred.emit(tr("err_patient_not_found_before_calc"))
                 return
                 
             # Поиск плана по курсам (исключая QA)
@@ -213,11 +215,11 @@ class EsapiWorker(QObject):
                     break
                     
             if plan is None:
-                self.error_occurred.emit(f"План '{plan_id}' не найден у пациента.")
+                self.error_occurred.emit(tr("err_plan_not_found", plan_id=plan_id))
                 return
                 
             if plan.StructureSet is None:
-                self.error_occurred.emit("У выбранного плана отсутствует набор структур (StructureSet).")
+                self.error_occurred.emit(tr("err_no_structure_set"))
                 return
 
             # Получаем все структуры плана
@@ -229,12 +231,12 @@ class EsapiWorker(QObject):
             # Выполняем расчет для каждого органа
             for organ_type, target_struct_id in organs_mapping.items():
                 if not target_struct_id:
-                    results[organ_type] = {"id": "", "sd": "n/a", "td": "n/a", "is_valid": False, "error_msg": "Не выбрано"}
+                    results[organ_type] = {"id": "", "sd": "n/a", "td": "n/a", "is_valid": False, "error_msg": "n/a"}
                     continue
                     
                 struct = structures.get(target_struct_id.lower())
                 if struct is None:
-                    results[organ_type] = {"id": target_struct_id, "sd": "n/a", "td": "n/a", "is_valid": False, "error_msg": "Не найдено"}
+                    results[organ_type] = {"id": target_struct_id, "sd": "n/a", "td": "n/a", "is_valid": False, "error_msg": "n/a"}
                     continue
                 
                 # Проверка объема структуры
@@ -245,7 +247,7 @@ class EsapiWorker(QObject):
                         "sd": "n/a",
                         "td": "n/a",
                         "is_valid": False,
-                        "error_msg": f"Объем < {volume} cc"
+                        "error_msg": tr("err_structure_volume_low", volume=volume)
                     }
                     continue
                 
@@ -274,7 +276,7 @@ class EsapiWorker(QObject):
                             "sd": "n/a",
                             "td": "n/a",
                             "is_valid": False,
-                            "error_msg": "Нет дозы"
+                            "error_msg": tr("err_no_dose")
                         }
                     else:
                         dose_val = dose_value.Dose
@@ -306,9 +308,9 @@ class EsapiWorker(QObject):
                         "sd": "n/a",
                         "td": "n/a",
                         "is_valid": False,
-                        "error_msg": f"Ошибка: {ex}"
+                        "error_msg": tr("err_calculation_failed", error=str(ex))
                     }
             
             self.calculation_completed.emit(results)
         except Exception as e:
-            self.error_occurred.emit(f"Критическая ошибка при расчете: {e}")
+            self.error_occurred.emit(tr("err_critical_calc", error=str(e)))
