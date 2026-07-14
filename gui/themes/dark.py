@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 # Палитра темы DICOM WatchDog
-COLOR_BACKGROUND = "#202020"
+COLOR_BACKGROUND = "#141414"
 COLOR_HEADER = "#242424"
 COLOR_SURFACE = "#0f0f0f"
 COLOR_BORDER = "#3d3d3d"
@@ -38,7 +38,7 @@ QWidget {{
 #InputGroup, #ResultsGroup, #SettingsGroup {{
     border: 1px solid {COLOR_BORDER};
     border-radius: 6px;
-    background-color: #141414;
+    background-color: #202020;
 }}
 
 /* Заголовки и метки */

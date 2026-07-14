@@ -69,9 +69,9 @@ class SettingsWindow(QDialog):
         self.sidebar.setFixedWidth(140)
         main_layout.addWidget(self.sidebar)
         
-        # Правая часть: stacked widget с контентом (темный фон как в DICOM WatchDog)
+        # Правая часть: stacked widget с контентом (прозрачный, наследует #202020 от рамки)
         self.stacked_widget = QStackedWidget()
-        self.stacked_widget.setStyleSheet("QStackedWidget { background-color: #141414; padding: 15px; }")
+        self.stacked_widget.setStyleSheet("QStackedWidget { background-color: transparent; padding: 15px; }")
         
         # Раздел General
         self.general_widget = QWidget()
