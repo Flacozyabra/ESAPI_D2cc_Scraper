@@ -38,7 +38,7 @@ QWidget {{
 #InputGroup, #ResultsGroup, #SettingsGroup {{
     border: 1px solid {COLOR_BORDER};
     border-radius: 6px;
-    background-color: transparent;
+    background-color: #141414;
 }}
 
 /* Заголовки и метки */
