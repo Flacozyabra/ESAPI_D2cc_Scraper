@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
+import sys
+import os
 from PyQt6.QtWidgets import QWidget, QHBoxLayout, QLabel, QPushButton
 from PyQt6.QtCore import Qt, QPoint
-from PyQt6.QtGui import QMouseEvent
+from PyQt6.QtGui import QMouseEvent, QPixmap
 from .themes.dark import COLOR_HEADER, COLOR_TEXT, COLOR_SURFACE
 
 class TitleBar(QWidget):
@@ -29,9 +31,15 @@ class TitleBar(QWidget):
                 color: {COLOR_TEXT};
                 font-size: 13px;
                 font-weight: bold;
-                padding-left: 10px;
                 border: none;
                 background-color: transparent;
+            }}
+            QLabel#TitleLabel {{
+                padding-left: 0px;
+            }}
+            QLabel#IconLabel {{
+                padding-left: 10px;
+                padding-right: 5px;
             }}
             QPushButton {{
                 background-color: transparent;
@@ -54,15 +62,33 @@ class TitleBar(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
         
+        # Иконка приложения в заголовке
+        self.icon_label = QLabel(self)
+        self.icon_label.setObjectName("IconLabel")
+        
+        # Определяем путь к логотипу (поддерживаем PyInstaller _MEIPASS)
+        if hasattr(sys, '_MEIPASS'):
+            base_path = sys._MEIPASS
+        else:
+            base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        logo_path = os.path.join(base_path, "src", "Eclipse_logo.png")
+        
+        pixmap = QPixmap(logo_path)
+        if not pixmap.isNull():
+            pixmap = pixmap.scaled(18, 18, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+            self.icon_label.setPixmap(pixmap)
+        layout.addWidget(self.icon_label)
+        
         # Название окна
         self.title_label = QLabel(self.title, self)
+        self.title_label.setObjectName("TitleLabel")
         layout.addWidget(self.title_label)
         
         layout.addStretch()
         
         # Кнопка настроек в заголовке
         self.btn_settings = QPushButton("⚙", self)
-        self.btn_settings.setToolTip("Настройки")
+        self.btn_settings.setToolTip("Settings" if "en" in logo_path else "Настройки")
         layout.addWidget(self.btn_settings)
         
         # Кнопка Свернуть
