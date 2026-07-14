@@ -16,6 +16,7 @@
   "lbl_dll_path": "Path to Eclipse ESAPI DLLs:",
   "dlg_select_dll_folder": "Select ESAPI DLLs Folder",
   
+  "log_conn_start": "Starting application. Connecting to ESAPI...",
   "log_conn_success": "Connection to ESAPI successfully established.",
   "log_conn_fail": "Failed to load ESAPI libraries: {message}. Please open Settings and specify the correct DLL path.",
   "log_loading_patient": "Loading patient: {query}...",

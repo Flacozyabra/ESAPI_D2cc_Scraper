@@ -100,7 +100,7 @@ class MainWindow(QMainWindow):
         self.setup_connections()
         
         # Инициализация ESAPI подключения
-        self.write_log(tr("log_conn_start", default="Starting application. Connecting to ESAPI..."), "info")
+        self.write_log(tr("log_conn_start"), "info")
         self.worker.request_action("connect")
 
     def init_ui(self):
