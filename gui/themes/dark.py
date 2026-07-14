@@ -77,6 +77,13 @@ QComboBox {{
     min-width: 60px;
 }}
 
+QComboBox QLineEdit {{
+    background: transparent;
+    border: none;
+    padding: 0px;
+    color: {COLOR_TEXT};
+}}
+
 QComboBox:editable {{
     background-color: {COLOR_SURFACE};
 }}
@@ -88,18 +95,23 @@ QComboBox:focus, QComboBox:on {{
 QComboBox::drop-down {{
     subcontrol-origin: padding;
     subcontrol-position: top right;
-    width: 20px;
-    border-left-width: 0px;
+    width: 24px;
+    border: none;
+    background: transparent;
 }}
 
 QComboBox::down-arrow {{
-    image: url(non_existent_icon.png);
-    width: 0; 
-    height: 0; 
+    image: none;
     border-left: 4px solid transparent;
     border-right: 4px solid transparent;
-    border-top: 5px solid {COLOR_TEXT};
+    border-top: 5px solid #a0a0a0;
+    width: 0; 
+    height: 0; 
     margin-right: 8px;
+}}
+
+QComboBox::down-arrow:hover {{
+    border-top-color: #ffffff;
 }}
 
 QAbstractItemView {{

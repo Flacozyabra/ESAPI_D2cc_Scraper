@@ -199,9 +199,17 @@ class MainWindow(QMainWindow):
         results_grid.setColumnStretch(2, 2)  # TD
         
         # Заголовки колонок
-        results_grid.addWidget(QLabel("<b>OAR</b>", self), 0, 0)
-        results_grid.addWidget(QLabel("<b>SD</b>", self), 0, 1)
-        results_grid.addWidget(QLabel("<b>TD</b>", self), 0, 2)
+        lbl_oar = QLabel("<b>OAR</b>", self)
+        lbl_oar.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        results_grid.addWidget(lbl_oar, 0, 0)
+        
+        lbl_sd_hdr = QLabel("<b>SD</b>", self)
+        lbl_sd_hdr.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        results_grid.addWidget(lbl_sd_hdr, 0, 1)
+        
+        lbl_td_hdr = QLabel("<b>TD</b>", self)
+        lbl_td_hdr.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        results_grid.addWidget(lbl_td_hdr, 0, 2)
         
         self.organ_widgets = {}
         organs = [("rectum", "Rectum"), ("bladder", "Bladder"), ("sigmoid", "Sigmoid"), ("bowel", "Bowel")]
@@ -271,8 +279,10 @@ class MainWindow(QMainWindow):
         self.plan_completer = QCompleter(self)
         self.plan_completer.setModel(self.plan_completer_model)
         self.plan_completer.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+        self.plan_completer.setCompletionMode(QCompleter.CompletionMode.UnfilteredPopupCompletion)
         self.plan_completer.popup().setStyleSheet("background-color: #0f0f0f; color: #ffffff; border: 1px solid #3d3d3d; selection-background-color: #1f538d; selection-color: #ffffff;")
         self.txt_plan_id.setCompleter(self.plan_completer)
+        self.txt_plan_id.installEventFilter(self)
 
     def setup_connections(self):
         self.worker.connection_status.connect(self.on_connection_status)
@@ -512,8 +522,8 @@ class MainWindow(QMainWindow):
             if res["is_valid"]:
                 widget["sd_label"].setText(res["sd"])
                 widget["td_label"].setText(res["td"])
-                widget["sd_label"].setStyleSheet("background-color: #0f0f0f; border: 1px solid #3d3d3d; border-radius: 6px; padding: 4px; color: #4CAF50; font-weight: bold; min-height: 24px;")
-                widget["td_label"].setStyleSheet("background-color: #0f0f0f; border: 1px solid #3d3d3d; border-radius: 6px; padding: 4px; color: #4CAF50; font-weight: bold; min-height: 24px;")
+                widget["sd_label"].setStyleSheet("background-color: #0f0f0f; border: 1px solid #3d3d3d; border-radius: 6px; padding: 4px; color: #ffffff; min-height: 24px;")
+                widget["td_label"].setStyleSheet("background-color: #0f0f0f; border: 1px solid #3d3d3d; border-radius: 6px; padding: 4px; color: #ffffff; min-height: 24px;")
                 self.write_log(f"[{widget['title']}] Расчет успешен. SD: {res['sd']}, TD: {res['td']}", "success")
             else:
                 widget["sd_label"].setText("n/a")
@@ -536,3 +546,11 @@ class MainWindow(QMainWindow):
     def on_error(self, message):
         self.write_log(message, "error")
         self.check_calculation_readiness()
+
+    def eventFilter(self, obj, event):
+        from PyQt6.QtCore import QEvent
+        if obj == self.txt_plan_id and event.type() == QEvent.Type.MouseButtonPress:
+            if self.txt_plan_id.text().strip() == "":
+                self.plan_completer.setCompletionPrefix("")
+            self.plan_completer.complete()
+        return super().eventFilter(obj, event)
