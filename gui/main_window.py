@@ -160,6 +160,10 @@ class MainWindow(QMainWindow):
         
         input_grid = QGridLayout()
         input_grid.setSpacing(10)
+        input_grid.setColumnStretch(0, 0)
+        input_grid.setColumnStretch(1, 3)
+        input_grid.setColumnStretch(2, 0)
+        input_grid.setColumnStretch(3, 1)
         
         input_grid.addWidget(QLabel("Patient Name:", self), 0, 0)
         self.txt_name = QLineEdit(self)
