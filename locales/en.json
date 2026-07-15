@@ -38,5 +38,22 @@
   "err_critical_calc": "Critical error during calculation: {error}",
   "err_search_patient": "Error searching patient: {error}",
   "err_load_patient": "Error loading patient: {error}",
-  "err_action_failed": "Error executing {action}: {error}"
+  "err_action_failed": "Error executing {action}: {error}",
+  
+  "update_available_title": "Update Available",
+  "update_available_msg": "New version available: {version}.\n\nDo you want to start the automatic update? (The application will restart automatically)",
+  "update_downloading": "Downloading update...",
+  "update_error_title": "Update Error",
+  "update_error_no_build": "Version {version} is available, but no matching build file (*.exe) was found in the release assets.\n\nPlease update the program manually on GitHub.",
+  "update_error_source": "Version {version} is available.\n\nYou are running the application from source code. Please update the repository manually (e.g., git pull).",
+  "update_waiting_exit": "Waiting for the application to exit...",
+  "update_replacing": "Replacing files...",
+  "update_error_replace": "ERROR: Failed to replace executable file.",
+  "update_error_replace_desc": "The program might still be running or Administrator privileges are required.",
+  "update_cleaning": "Cleaning up temporary files...",
+  "update_launching": "Launching the new version...",
+  "update_script_err": "Failed to create update script:\n{error}",
+  "update_download_err": "An error occurred while downloading the update:\n{error}",
+  "chk_dont_show_again": "Don't check for updates at startup",
+  "chk_check_updates_startup": "Check for updates at startup"
 }

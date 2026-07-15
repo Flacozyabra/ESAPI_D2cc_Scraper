@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import sys
 import os
-from PyQt6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QListWidget, QStackedWidget, QWidget, QLabel, QLineEdit, QPushButton, QFileDialog, QDialogButtonBox
+from PyQt6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QListWidget, QStackedWidget, QWidget, QLabel, QLineEdit, QPushButton, QFileDialog, QDialogButtonBox, QCheckBox
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QIcon
 from .themes.dark import DARK_THEME_STYLE
@@ -103,6 +103,12 @@ class SettingsWindow(QDialog):
         path_box_layout.addWidget(btn_browse)
         
         gen_layout.addLayout(path_box_layout)
+        
+        # Чекбокс проверки обновлений при запуске
+        self.chk_updates = QCheckBox(tr("chk_check_updates_startup"), self.general_widget)
+        self.chk_updates.setChecked(self.config.get("check_updates_at_startup", True))
+        gen_layout.addWidget(self.chk_updates)
+        
         gen_layout.addStretch()
         
         self.stacked_widget.addWidget(self.general_widget)
@@ -130,6 +136,7 @@ class SettingsWindow(QDialog):
     def save_settings(self):
         # Сохранение настроек
         self.config["eclipse_bin_path"] = self.txt_path.text().strip()
+        self.config["check_updates_at_startup"] = self.chk_updates.isChecked()
         from core.config import save_config
         save_config(self.config)
         self.accept()

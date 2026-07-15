@@ -8,7 +8,7 @@ from .title_bar import TitleBar
 from .settings_window import SettingsWindow
 from .themes.dark import DARK_THEME_STYLE, get_organ_field_style
 from core.esapi_worker import EsapiWorker
-from core.config import load_config
+from core.config import load_config, VERSION
 from core.locale import tr
 
 class LogToggleButton(QPushButton):
@@ -102,6 +102,9 @@ class MainWindow(QMainWindow):
         # Инициализация ESAPI подключения
         self.write_log(tr("log_conn_start"), "info")
         self.worker.request_action("connect")
+        
+        # Проверка обновлений при запуске
+        self.check_for_updates_on_startup()
 
     def init_ui(self):
         # Настройка главного окна: безрамочность и прозрачный фон
@@ -148,7 +151,7 @@ class MainWindow(QMainWindow):
         main_layout.setSpacing(0)
         
         # Заголовок (TitleBar)
-        self.title_bar = TitleBar(self, title=tr("window_title"))
+        self.title_bar = TitleBar(self, title=f"{tr('window_title')} v{VERSION}")
         self.title_bar.btn_settings.clicked.connect(self.open_settings)
         main_layout.addWidget(self.title_bar)
         
@@ -565,3 +568,34 @@ class MainWindow(QMainWindow):
                 self.plan_completer.setCompletionPrefix("")
             self.plan_completer.complete()
         return super().eventFilter(obj, event)
+
+    def check_for_updates_on_startup(self):
+        if self.config.get("check_updates_at_startup", True):
+            from core.updater import UpdateCheckWorker
+            self.startup_update_worker = UpdateCheckWorker()
+            self.startup_update_worker.finished.connect(self.on_startup_update_checked)
+            self.startup_update_worker.start()
+
+    def on_startup_update_checked(self, latest_version, html_url, assets):
+        from core.updater import is_newer_version, run_auto_update, apply_dark_title_bar
+        from PyQt6.QtWidgets import QMessageBox, QCheckBox
+        
+        if latest_version and is_newer_version(VERSION, latest_version):
+            msg = QMessageBox(self)
+            msg.setIcon(QMessageBox.Icon.Information)
+            msg.setWindowTitle(tr("update_available_title"))
+            msg.setText(tr("update_available_msg", version=latest_version))
+            msg.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+            msg.setDefaultButton(QMessageBox.StandardButton.Yes)
+            
+            cb = QCheckBox(tr("chk_dont_show_again"), msg)
+            msg.setCheckBox(cb)
+            apply_dark_title_bar(msg)
+            
+            if msg.exec() == QMessageBox.StandardButton.Yes:
+                run_auto_update(self, latest_version, assets)
+                
+            if cb.isChecked():
+                self.config["check_updates_at_startup"] = False
+                from core.config import save_config
+                save_config(self.config)
