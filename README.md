@@ -3,7 +3,7 @@
 [RU](#russian-version) | [EN](#english-version)
 
 <details>
-<summary><b>Show Screenshot</b></summary>
+<summary><b><font color="#0969da">Show Screenshot</font></b></summary>
 
 ![Program Interface](src/screenshot.jpg)
 
