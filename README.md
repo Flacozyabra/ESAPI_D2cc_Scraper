@@ -1,12 +1,12 @@
 # ESAPI D2cc Scraper
 
-[Русская версия (Russian Version)](#russian-version) | [English Version](#english-version)
+[RU](#russian-version) | [EN](#english-version)
 
 ---
 
 ## Russian Version
 
-**ESAPI D2cc Scraper** — это специализированное приложение с графическим интерфейсом на PyQt6 для автоматического извлечения дозовых параметров $D_{2\text{cc}}$ (доза на объем 2 кубических сантиметра) для критических органов (OAR: прямая кишка, мочевой пузырь, сигмовидная кишка, кишечник) из планов облучения Varian Eclipse через Eclipse Scripting API (ESAPI).
+**ESAPI D2cc Scraper** — это специализированное приложение с графическим интерфейсом на PyQt6 для автоматического извлечения дозовых параметров $D_{2\text{cc}}$ (доза на объем 2 кубических сантиметра) для критических органов (OAR: прямая кишка, мочевой пузырь, сигмовидная кишка, кишечник) из планов облучения Varian Eclipse через Eclipse Scripting API.
 
 <details>
 <summary><b>Показать скриншот интерфейса (Show Screenshot)</b></summary>
@@ -18,10 +18,8 @@
 ### Основные возможности
 * **Автоматическое подключение к ESAPI**: Динамическое подключение к библиотекам Eclipse ESAPI.
 * **Быстрый поиск пациентов**: Интерактивный поиск пациентов по ID или фамилии с автозаполнением.
-* **Автоматическое сопоставление структур**: Умный поиск контуров органов в плане по набору синонимов (например, для Rectum ищет `rectum`, `anorectum`).
-* **Расчет параметров**: Быстрый расчет предписанной дозы на объем (D2cc, SD и TD) для выбранных OAR.
-* **Полная локализация**: Интерфейс и логи полностью переведены на английский язык с поддержкой внешних JSON-ресурсов локализации.
-* **Красивый темный интерфейс**: Адаптивный дизайн в стиле Windows 11 / Immersive Dark Mode.
+* **Автоматическое сопоставление структур**: Умный поиск контуров органов в плане по набору синонимов.
+* **Расчет параметров**: Быстрый расчет предписанной дозы на выбранный объем для выбранных OAR.
 
 ### Требования
 * Windows 10 / 11
@@ -50,7 +48,7 @@
 
 ## English Version
 
-**ESAPI D2cc Scraper** is a specialized PyQt6 GUI application designed to automatically extract $D_{2\text{cc}}$ dose parameters (dose at 2 cc volume) for Organs at Risk (OARs: Rectum, Bladder, Sigmoid, Bowel) from Varian Eclipse treatment plans via the Eclipse Scripting API (ESAPI).
+**ESAPI D2cc Scraper** is a specialized PyQt6 GUI application designed to automatically extract $D_{2\text{cc}}$ dose parameters (dose at 2 cc volume) for Organs at Risk (OARs: Rectum, Bladder, Sigmoid, Bowel) from Varian Eclipse treatment plans via the Eclipse Scripting API.
 
 <details>
 <summary><b>Show Screenshot</b></summary>
@@ -62,10 +60,8 @@
 ### Key Features
 * **Automatic ESAPI Connection**: Dynamic loading and connection to Eclipse ESAPI libraries.
 * **Fast Patient Search**: Interactive patient lookup by ID or Name with auto-completion.
-* **Automatic Structure Matching**: Smart organ contour matching using synonyms (e.g., searches for `rectum` and `anorectum` for Rectum).
-* **Dose Calculation**: Quick calculation of single dose (SD) and total dose (TD) at the specified volume (D2cc) for selected OARs.
-* **Full Localization**: The interface and logs are fully localized to English via external JSON resource files.
-* **Sleek Dark UI**: Responsive design styled to match Windows 11 / Immersive Dark Mode.
+* **Automatic Structure Matching**: Smart organ contour matching using synonyms.
+* **Dose Calculation**: Quick calculation of prescribed dose at the selected volume for the selected OARs.
 
 ### System Requirements
 * Windows 10 / 11
