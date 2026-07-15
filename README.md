@@ -2,8 +2,8 @@
 
 [RU](#russian-version) | [EN](#english-version)
 
-<details>
-<summary><b><font color="#0969da">Show Screenshot</font></b></summary>
+<details id="show-screenshot">
+<summary><b><a href="#show-screenshot">Show Screenshot</a></b></summary>
 
 ![Program Interface](src/screenshot.jpg)
 
