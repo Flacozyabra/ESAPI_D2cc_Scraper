@@ -2,12 +2,7 @@
 
 [RU](#russian-version) | [EN](#english-version)
 
-<details>
-<summary><font color="#0969da">Show Screenshot 📸</font></summary>
-
 ![Program Interface](src/screenshot.jpg)
-
-</details>
 
 ---
 
